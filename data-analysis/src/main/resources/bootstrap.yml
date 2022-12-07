@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: data-analysis
+  cloud:
+    nacos:
+      config:
+        server-addr: 119.91.192.36:8848
+        file-extension: yaml
+        group: variance
+        namespace: 254bb7ac-7bb3-424e-b183-d04df3a3b134
+        shared-configs:
+          - ${spring.application.name}.${spring.cloud.nacos.config.file-extension}
+      discovery:
+        server-addr: 119.91.192.36:8848
+        namespace: 254bb7ac-7bb3-424e-b183-d04df3a3b134

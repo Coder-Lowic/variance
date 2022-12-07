@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--注意换成自己的mapper文件地址-->
+<mapper namespace="com.lowic.data.analysis.mapper.SdAdRpMapper">
+
+    <insert id="batchInsert" parameterType="com.lowic.data.analysis.entity.SdAdRp">
+        INSERT INTO sd_ad_rp (
+            `date`,
+            currency,
+            campaign_name,
+            portfolio_name,
+            cost_type,
+            ad_group_name,
+            bid_optimization,
+            advertised_sku,
+            advertised_asin,
+            impressions,
+            viewable_impressions,
+            clicks,
+            ctr,
+            fourteen_day_detail_page_views,
+            spend,
+            cpc,
+            vcpm,
+            acos,
+            roas,
+            fourteen_day_total_orders,
+            fourteen_day_total_units,
+            fourteen_day_total_sales,
+            fourteen_day_new_to_brand_orders,
+            fourteen_day_new_to_brand_sales,
+            fourteen_day_new_to_brand_units,
+            total_advertising_cost_of_sales_acos_click,
+            total_return_on_advertising_spend_roas_click,
+            fourteen_day_total_orders_click,
+            fourteen_day_total_units_click,
+            fourteen_day_total_sales_click,
+            fourteen_day_new_to_brand_orders_click,
+            fourteen_day_new_to_brand_sales_click,
+            fourteen_day_new_to_brand_units_click
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+        (
+            #{item.date},
+            #{item.currency},
+            #{item.campaignName},
+            #{item.portfolioName},
+            #{item.costType},
+            #{item.adGroupName},
+            #{item.bidOptimization},
+            #{item.advertisedSku},
+            #{item.advertisedAsin},
+            #{item.impressions},
+            #{item.viewableImpressions},
+            #{item.clicks},
+            #{item.ctr},
+            #{item.fourteenDayDetailPageViews},
+            #{item.spend},
+            #{item.cpc},
+            #{item.vcpm},
+            #{item.acos},
+            #{item.roas},
+            #{item.fourteenDayTotalOrders},
+            #{item.fourteenDayTotalUnits},
+            #{item.fourteenDayTotalSales},
+            #{item.fourteenDayNewToBrandOrders},
+            #{item.fourteenDayNewToBrandSales},
+            #{item.fourteenDayNewToBrandUnits},
+            #{item.totalAdvertisingCostOfSalesAcosClick},
+            #{item.totalReturnOnAdvertisingSpendRoasClick},
+            #{item.fourteenDayTotalOrdersClick},
+            #{item.fourteenDayTotalUnitsClick},
+            #{item.fourteenDayTotalSalesClick},
+            #{item.fourteenDayNewToBrandOrdersClick},
+            #{item.fourteenDayNewToBrandSalesClick},
+            #{item.fourteenDayNewToBrandUnitsClick}
+        )
+        </foreach>
+    </insert>
+</mapper>

@@ -54,7 +54,7 @@ public class SdAdRp implements Serializable {
 
     private BigDecimal ctr;
 
-    private Integer Day14DetailPageViews;
+    private Integer fourteenDayDetailPageViews;
 
     private BigDecimal spend;
 
@@ -66,32 +66,32 @@ public class SdAdRp implements Serializable {
 
     private BigDecimal roas;
 
-    private Integer Day14TotalOrders;
+    private Integer fourteenDayTotalOrders;
 
-    private Integer Day14TotalUnits;
+    private Integer fourteenDayTotalUnits;
 
-    private BigDecimal Day14TotalSales;
+    private BigDecimal fourteenDayTotalSales;
 
-    private Integer Day14NewToBrandOrders;
+    private Integer fourteenDayNewToBrandOrders;
 
-    private BigDecimal Day14NewToBrandSales;
+    private BigDecimal fourteenDayNewToBrandSales;
 
-    private Integer Day14NewToBrandUnits;
+    private Integer fourteenDayNewToBrandUnits;
 
     private BigDecimal totalAdvertisingCostOfSalesAcosClick;
 
     private BigDecimal totalReturnOnAdvertisingSpendRoasClick;
 
-    private Integer Day14TotalOrdersClick;
+    private Integer fourteenDayTotalOrdersClick;
 
-    private Integer Day14TotalUnitsClick;
+    private Integer fourteenDayTotalUnitsClick;
 
-    private BigDecimal Day14TotalSalesClick;
+    private BigDecimal fourteenDayTotalSalesClick;
 
-    private Integer Day14NewToBrandOrdersClick;
+    private Integer fourteenDayNewToBrandOrdersClick;
 
-    private BigDecimal Day14NewToBrandSalesClick;
+    private BigDecimal fourteenDayNewToBrandSalesClick;
 
-    private Integer Day14NewToBrandUnitsClick;
+    private Integer fourteenDayNewToBrandUnitsClick;
 
 }
