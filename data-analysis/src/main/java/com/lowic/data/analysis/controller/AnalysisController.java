@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForSdAdRp")
     public String uploadExcelForSdAdRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<SdAdRp> sdAdRpList = excelReader.read(0, 1, SdAdRp.class);
 
@@ -68,8 +70,10 @@ public class AnalysisController {
             // 关闭
             sqlSession.close();
 
+            LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(SdAdRp.class.getAnnotation(TableName.class).value()).importCounts(sdAdRpList.size())
+                    .costTime(Duration.between(startTime,endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 

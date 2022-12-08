@@ -33,6 +33,8 @@ public class ImportOperateRecord implements Serializable {
 
     private Integer importCounts;
 
+    private Long costTime;
+
     private Integer createId;
 
     private LocalDateTime createTime;
