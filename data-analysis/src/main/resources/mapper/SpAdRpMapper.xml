@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lowic.data.analysis.mapper.SpAdRpMapper">
+    <insert id="batchInsert" parameterType="com.lowic.data.analysis.entity.SpAdRp">
+        INSERT INTO sp_ad_rp (
+            `date`,
+            portfolio_name,
+            currency,
+            campaign_name,
+            ad_group_name,
+            advertised_sku,
+            advertised_asin,
+            impressions,
+            clicks,
+            ctr,
+            cpc,
+            spend,
+            seven_day_total_sales,
+            acos,
+            roas,
+            seven_day_total_orders,
+            seven_day_total_units,
+            seven_day_conversion_rate,
+            seven_day_advertised_sku_units,
+            seven_day_other_sku_units,
+            seven_day_advertised_sku_sales,
+            seven_day_other_sku_sales
+        ) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+        (
+            #{item.date},
+            #{item.portfolioName},
+            #{item.currency},
+            #{item.campaignName},
+            #{item.adGroupName},
+            #{item.advertisedSku},
+            #{item.advertisedAsin},
+            #{item.impressions},
+            #{item.clicks},
+            #{item.ctr},
+            #{item.cpc},
+            #{item.spend},
+            #{item.sevenDayTotalSales},
+            #{item.acos},
+            #{item.roas},
+            #{item.sevenDayTotalOrders},
+            #{item.sevenDayTotalUnits},
+            #{item.sevenDayConversionRate},
+            #{item.sevenDayAdvertisedSkuUnits},
+            #{item.sevenDayOtherSkuUnits},
+            #{item.sevenDayAdvertisedSkuSales},
+            #{item.sevenDayOtherSkuSales}
+        )
+        </foreach>
+    </insert>
+</mapper>

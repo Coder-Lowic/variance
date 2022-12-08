@@ -8,7 +8,10 @@ spring:
     username:
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
-
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 1000MB
 
 logging:
   level:
