@@ -79,7 +79,7 @@ public class AnalysisController {
             LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(SdAdRp.class.getAnnotation(TableName.class).value()).importCounts(sdAdRpList.size())
-                    .costTime(Duration.between(startTime,endTime).toSeconds())
+                    .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
@@ -92,6 +92,7 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForSpAdRp")
     public String uploadExcelForSpAdRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<SpAdRp> spAdRpList = excelReader.read(0, 1, SpAdRp.class);
 
@@ -123,8 +124,10 @@ public class AnalysisController {
             // 关闭
             sqlSession.close();
 
+            LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(SpAdRp.class.getAnnotation(TableName.class).value()).importCounts(spAdRpList.size())
+                    .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
@@ -137,6 +140,7 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForSbCampRp")
     public String uploadExcelForSbCampRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<SbCampRp> sbCampRpList = excelReader.read(0, 1, SbCampRp.class);
 
@@ -168,8 +172,10 @@ public class AnalysisController {
             // 关闭
             sqlSession.close();
 
+            LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(SbCampRp.class.getAnnotation(TableName.class).value()).importCounts(sbCampRpList.size())
+                    .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
@@ -182,6 +188,7 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForBusinessReport")
     public String uploadExcelForBusinessReport(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<BusinessReport> businessReportList = excelReader.read(0, 1, BusinessReport.class);
 
@@ -213,8 +220,10 @@ public class AnalysisController {
             // 关闭
             sqlSession.close();
 
+            LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(BusinessReport.class.getAnnotation(TableName.class).value()).importCounts(businessReportList.size())
+                    .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
@@ -227,6 +236,7 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForSbInfo")
     public String uploadExcelForSbInfo(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<SbInfo> sbInfoList = excelReader.read(0, 1, SbInfo.class);
 
@@ -258,8 +268,10 @@ public class AnalysisController {
             // 关闭
             sqlSession.close();
 
+            LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(SbInfo.class.getAnnotation(TableName.class).value()).importCounts(sbInfoList.size())
+                    .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
@@ -272,6 +284,7 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForProductionInfo")
     public String uploadExcelForProductionInfo(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<ProductionInfo> productionInfoList = excelReader.read(0, 1, ProductionInfo.class);
 
@@ -303,8 +316,10 @@ public class AnalysisController {
             // 关闭
             sqlSession.close();
 
+            LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(ProductionInfo.class.getAnnotation(TableName.class).value()).importCounts(productionInfoList.size())
+                    .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
