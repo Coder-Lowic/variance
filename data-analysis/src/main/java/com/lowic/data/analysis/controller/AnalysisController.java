@@ -6,10 +6,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.lowic.data.analysis.entity.BusinessReport;
 import com.lowic.data.analysis.entity.ImportOperateRecord;
 import com.lowic.data.analysis.entity.SbCampRp;
+import com.lowic.data.analysis.entity.SbInfo;
 import com.lowic.data.analysis.entity.SdAdRp;
 import com.lowic.data.analysis.entity.SpAdRp;
 import com.lowic.data.analysis.mapper.BusinessReportMapper;
 import com.lowic.data.analysis.mapper.SbCampRpMapper;
+import com.lowic.data.analysis.mapper.SbInfoMapper;
 import com.lowic.data.analysis.mapper.SdAdRpMapper;
 import com.lowic.data.analysis.mapper.SpAdRpMapper;
 import com.lowic.data.analysis.service.IImportOperateRecordService;
@@ -211,6 +213,51 @@ public class AnalysisController {
 
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
                     .targetTable(BusinessReport.class.getAnnotation(TableName.class).value()).importCounts(businessReportList.size())
+                    .createTime(LocalDateTime.now()).createId(1004).build();
+            iImportOperateRecordService.save(importOperateRecord);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return "上传成功";
+    }
+
+    @RequestMapping("uploadExcelForSbInfo")
+    public String uploadExcelForSbInfo(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
+            List<SbInfo> sbInfoList = excelReader.read(0, 1, SbInfo.class);
+
+            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
+            SbInfoMapper mapper = sqlSession.getMapper(SbInfoMapper.class);
+            // 每批次导入的最大数据
+            int batchCount = 5000;
+            // 每批最后一条数据下标等于批量大小
+            int batchLastIndex = batchCount;
+            // 批量插入   index 为 下标
+            for (int index = 0; index < sbInfoList.size(); ) {
+                // 如果读取的数量大小 小于 批量大小
+                if (sbInfoList.size() < batchLastIndex) {
+                    batchLastIndex = sbInfoList.size();
+                    mapper.batchInsert(sbInfoList.subList(index, batchLastIndex));
+                    // 清除缓存
+                    sqlSession.clearCache();
+                    break;
+                } else {
+                    mapper.batchInsert(sbInfoList.subList(index, batchLastIndex));
+                    // 清除缓存 防止溢出
+                    sqlSession.clearCache();
+                    index = batchLastIndex;
+                    batchLastIndex = index + (batchCount - 1);
+                }
+            }
+            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
+            sqlSession.commit();
+            // 关闭
+            sqlSession.close();
+
+            ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
+                    .targetTable(SbInfo.class.getAnnotation(TableName.class).value()).importCounts(sbInfoList.size())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
 
