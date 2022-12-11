@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lowic.data.analysis.mapper.BusinessReportMapper">
+    <insert id="batchInsert" parameterType="com.lowic.data.analysis.entity.SbCampRp">
+        insert into business_report (
+            parent_asin,
+            child_asin,
+            title,
+            sku,
+            sessions_total,
+            session_percentage_total,
+            page_views_total,
+            page_views_percentage_total,
+            buy_box,
+            units_order,
+            order_b2b,
+            unit_session_percentage,
+            unit_session_percentage_b2b,
+            sales,
+            sales_b2b,
+            total_order_items,
+            total_order_items_b2b
+        ) values
+        <foreach collection="list" item="item" index="index" separator=",">
+        (
+            #{item.parentAsin},
+            #{item.childAsin},
+            #{item.title},
+            #{item.sku},
+            #{item.sessionsTotal},
+            #{item.sessionPercentageTotal},
+            #{item.pageViewsTotal},
+            #{item.pageViewsPercentageTotal},
+            #{item.buyBox},
+            #{item.unitsOrder},
+            #{item.orderB2b},
+            #{item.unitSessionPercentage},
+            #{item.unitSessionPercentageB2b},
+            #{item.sales},
+            #{item.salesB2b},
+            #{item.totalOrderItems},
+            #{item.totalOrderItemsB2b}
+        )
+        </foreach>
+    </insert>
+</mapper>
