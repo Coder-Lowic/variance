@@ -16,6 +16,7 @@ import com.lowic.data.analysis.mapper.SbCampRpMapper;
 import com.lowic.data.analysis.mapper.SbInfoMapper;
 import com.lowic.data.analysis.mapper.SdAdRpMapper;
 import com.lowic.data.analysis.mapper.SpAdRpMapper;
+import com.lowic.data.analysis.service.IAnalysisService;
 import com.lowic.data.analysis.service.IImportOperateRecordService;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
@@ -38,12 +39,20 @@ import java.util.List;
 @RequestMapping("analysis")
 public class AnalysisController {
     @Resource
+    private IAnalysisService iAnalysisService;
+    @Resource
     private IImportOperateRecordService iImportOperateRecordService;
     @Resource
     private SqlSessionTemplate sqlSessionTemplate;
 
     @RequestMapping("uploadExcelForSdAdRp")
     public String uploadExcelForSdAdRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        batchInsertBySqlSession(multipartFile, SdAdRp.class, SdAdRpMapper.class);
+
+        return "上传成功";
+    }
+
+    private void batchInsertBySqlSession(MultipartFile multipartFile, Class<?> entityClazz, Class<?> mapperClazz) {
         LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<SdAdRp> sdAdRpList = excelReader.read(0, 1, SdAdRp.class);
@@ -86,8 +95,6 @@ public class AnalysisController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return "上传成功";
     }
 
     @RequestMapping("uploadExcelForSpAdRp")
