@@ -1,5 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lowic.data.analysis.mapper.AnalysisMapper">
-
+    <select id="listSpAdRpContactBuRp">
+        select sp_result.*,
+               pd.category_one,
+               pd.category_two,
+               pd.shop,
+               pd.product_owner,
+               pd.product_grade,
+               pd.sales_status,
+               pd.brand,
+               br.sessions_total,
+               br.units_order,
+               br.sales
+        from (select sp.date,
+                     sp.advertised_asin,
+                  MONTH(sp.date)                                                                  as month,
+                  WEEK(sp.date, 1)                                                                as week,
+                  DATE_FORMAT(SUBDATE(sp.date, (DATE_FORMAT(sp.date, '%w') + 6) % 7), '%Y-%m-%d') as weekStart,
+                  DATE_FORMAT(SUBDATE(sp.date, (DATE_FORMAT(sp.date, '%w') - 7) % 7), '%Y-%m-%d') as weekEnd,
+                  DATE_FORMAT(sp.date, '%w')                                                      as weekday,
+                  SUM(sp.impressions)                                                             as impressions,
+                  SUM(sp.clicks)                                                                  as clicks,
+                  SUM(sp.spend)                                                                   as spend,
+                  SUM(sp.seven_day_total_sales)                                                   as sales,
+                  SUM(sp.seven_day_total_orders)                                                  as orders,
+                  SUM(sp.seven_day_total_units)                                                   as units
+              from sp_ad_rp sp
+              group by sp.date,
+                  sp.advertised_asin) sp_result
+                 left join production_info pd on sp_result.advertised_asin = pd.asin
+                 left join business_report br on sp_result.advertised_asin = br.child_asin
+    </select>
 </mapper>
