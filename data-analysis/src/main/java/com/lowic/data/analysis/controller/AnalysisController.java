@@ -47,12 +47,12 @@ public class AnalysisController {
 
     @RequestMapping("uploadExcelForSdAdRp")
     public String uploadExcelForSdAdRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
-        batchInsertBySqlSession(multipartFile, SdAdRp.class, SdAdRpMapper.class);
+        batchInsertBySqlSession(multipartFile);
 
         return "上传成功";
     }
 
-    private void batchInsertBySqlSession(MultipartFile multipartFile, Class<?> entityClazz, Class<?> mapperClazz) {
+    private void batchInsertBySqlSession(MultipartFile multipartFile) {
         LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
             List<SdAdRp> sdAdRpList = excelReader.read(0, 1, SdAdRp.class);
