@@ -1,6 +1,6 @@
 package com.lowic.data.analysis.service;
 
-import com.lowic.data.analysis.entity.ProductionInfo;
+import com.lowic.data.analysis.entity.ProductInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -11,6 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author lowic
  * @since 2022-12-11
  */
-public interface IProductionInfoService extends IService<ProductionInfo> {
+public interface IProductInfoService extends IService<ProductInfo> {
 
 }
