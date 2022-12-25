@@ -15,9 +15,9 @@ import java.io.Serializable;
  * @since 2022-12-11
  */
 @Data
-@TableName("production_info")
-@ApiModel(value = "ProductionInfo对象", description = "")
-public class ProductionInfo implements Serializable {
+@TableName("product_info")
+@ApiModel(value = "ProductInfo对象", description = "")
+public class ProductInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

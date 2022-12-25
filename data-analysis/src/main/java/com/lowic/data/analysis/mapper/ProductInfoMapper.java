@@ -1,7 +1,7 @@
 package com.lowic.data.analysis.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.lowic.data.analysis.entity.ProductionInfo;
+import com.lowic.data.analysis.entity.ProductInfo;
 
 import java.util.List;
 
@@ -13,11 +13,11 @@ import java.util.List;
  * @author lowic
  * @since 2022-12-11
  */
-public interface ProductionInfoMapper extends BaseMapper<ProductionInfo> {
+public interface ProductInfoMapper extends BaseMapper<ProductInfo> {
     /**
      * 批量插入
      *
-     * @param productionInfoList 源数据
+     * @param productInfoList 源数据
      */
-    void batchInsert(List<ProductionInfo> productionInfoList);
+    void batchInsert(List<ProductInfo> productInfoList);
 }
