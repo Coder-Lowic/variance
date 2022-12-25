@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -19,13 +20,15 @@ import java.math.BigDecimal;
  */
 @Data
 @TableName("business_report")
-@ApiModel(value = "BusinessReport对象", description = "")
+@ApiModel(value = "BusinessReport对象", description = "BusinessReport对象")
 public class BusinessReport implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
+
+    private LocalDateTime date;
 
     private String parentAsin;
 

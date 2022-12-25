@@ -3,6 +3,7 @@
 <mapper namespace="com.lowic.data.analysis.mapper.BusinessReportMapper">
     <insert id="batchInsert" parameterType="com.lowic.data.analysis.entity.SbCampRp">
         insert into business_report (
+            `date`,
             parent_asin,
             child_asin,
             title,
@@ -23,6 +24,7 @@
         ) values
         <foreach collection="list" item="item" index="index" separator=",">
         (
+            #{item.date},
             #{item.parentAsin},
             #{item.childAsin},
             #{item.title},
