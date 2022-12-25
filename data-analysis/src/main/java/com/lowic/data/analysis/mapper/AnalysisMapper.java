@@ -1,7 +1,8 @@
 package com.lowic.data.analysis.mapper;
 
+import com.lowic.data.analysis.export.vo.SpCombineBr;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -12,6 +13,6 @@ import java.util.Map;
  * @since 2022-12-11
  */
 public interface AnalysisMapper {
-    List<Map<String, String>> listSpAdRpContactBuRp();
+    List<SpCombineBr> listSpAdRpContactBuRp();
 
 }

@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Lowic
@@ -338,9 +337,4 @@ public class AnalysisController {
         return "上传成功";
     }
 
-    @RequestMapping("listSpAdRpContactBuRp")
-    public List<Map<String, String>> listSpAdRpContactBuRp(){
-
-        return iAnalysisService.listSpAdRpContactBuRp();
-    }
 }

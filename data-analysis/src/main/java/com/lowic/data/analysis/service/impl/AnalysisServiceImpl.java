@@ -1,12 +1,12 @@
 package com.lowic.data.analysis.service.impl;
 
+import com.lowic.data.analysis.export.vo.SpCombineBr;
 import com.lowic.data.analysis.mapper.AnalysisMapper;
 import com.lowic.data.analysis.service.IAnalysisService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Lowic
@@ -17,7 +17,7 @@ public class AnalysisServiceImpl implements IAnalysisService {
     private AnalysisMapper analysisMapper;
 
     @Override
-    public List<Map<String, String>> listSpAdRpContactBuRp() {
+    public List<SpCombineBr> listSpAdRpContactBuRp() {
         return analysisMapper.listSpAdRpContactBuRp();
     }
 }

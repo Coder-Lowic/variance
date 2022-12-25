@@ -1,11 +1,12 @@
 package com.lowic.data.analysis.service;
 
+import com.lowic.data.analysis.export.vo.SpCombineBr;
+
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Lowic
  */
 public interface IAnalysisService {
-    List<Map<String, String>> listSpAdRpContactBuRp();
+    List<SpCombineBr> listSpAdRpContactBuRp();
 }
