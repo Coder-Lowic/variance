@@ -1,6 +1,7 @@
 package com.lowic.data.analysis.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -11,6 +12,6 @@ import java.util.List;
  * @since 2022-12-11
  */
 public interface AnalysisMapper {
-    List<?> listSpAdRpContactBuRp();
+    List<Map<String, String>> listSpAdRpContactBuRp();
 
 }

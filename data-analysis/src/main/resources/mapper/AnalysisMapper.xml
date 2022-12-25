@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lowic.data.analysis.mapper.AnalysisMapper">
-    <select id="listSpAdRpContactBuRp">
+    <select id="listSpAdRpContactBuRp" resultType="java.util.Map">
         select sp_result.*,
                pd.category_one,
                pd.category_two,
@@ -12,24 +12,83 @@
                pd.brand,
                br.sessions_total,
                br.units_order,
-               br.sales
-        from (select sp.date,
-                     sp.advertised_asin,
-                  MONTH(sp.date)                                                                  as month,
-                  WEEK(sp.date, 1)                                                                as week,
-                  DATE_FORMAT(SUBDATE(sp.date, (DATE_FORMAT(sp.date, '%w') + 6) % 7), '%Y-%m-%d') as weekStart,
-                  DATE_FORMAT(SUBDATE(sp.date, (DATE_FORMAT(sp.date, '%w') - 7) % 7), '%Y-%m-%d') as weekEnd,
-                  DATE_FORMAT(sp.date, '%w')                                                      as weekday,
-                  SUM(sp.impressions)                                                             as impressions,
-                  SUM(sp.clicks)                                                                  as clicks,
-                  SUM(sp.spend)                                                                   as spend,
-                  SUM(sp.seven_day_total_sales)                                                   as sales,
-                  SUM(sp.seven_day_total_orders)                                                  as orders,
-                  SUM(sp.seven_day_total_units)                                                   as units
+               br.br_sales
+        from (select date,
+                     advertised_asin,
+                     MONTH(date)                                                               as month,
+                     WEEK(date, 1)                                                             as week,
+                     DATE_FORMAT(SUBDATE(date, (DATE_FORMAT(date, '%w') + 6) % 7), '%Y-%m-%d') as weekStart,
+                     DATE_FORMAT(SUBDATE(date, (DATE_FORMAT(date, '%w') - 7) % 7), '%Y-%m-%d') as weekEnd,
+                     DATE_FORMAT(date, '%w')                                                   as weekday,
+                     SUM(impressions)                                                          as impressions,
+                     SUM(clicks)                                                               as clicks,
+                     SUM(spend)                                                                as spend,
+                     SUM(seven_day_total_sales)                                                as sp_sales,
+                     SUM(seven_day_total_orders)                                               as orders,
+                     SUM(seven_day_total_units)                                                as units
               from sp_ad_rp sp
-              group by sp.date,
-                  sp.advertised_asin) sp_result
-                 left join production_info pd on sp_result.advertised_asin = pd.asin
-                 left join business_report br on sp_result.advertised_asin = br.child_asin
+              group by date,
+                       advertised_asin) sp_result
+                 left join product_info pd on sp_result.advertised_asin = pd.asin
+                 left join (select date,
+                                   child_asin,
+                                   SUM(sessions_total) as sessions_total,
+                                   SUM(units_order)    as units_order,
+                                   SUM(sales)          as br_sales
+                            from business_report
+                            group by date, child_asin) br
+                           on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
+
+        union all
+
+        select br.date,
+               br.child_asin,
+               sp_result.month,
+               sp_result.week,
+               sp_result.weekStart,
+               sp_result.weekEnd,
+               sp_result.weekday,
+               sp_result.impressions,
+               sp_result.clicks,
+               sp_result.spend,
+               sp_result.sp_sales,
+               sp_result.orders,
+               sp_result.units,
+               pd.category_one,
+               pd.category_two,
+               pd.shop,
+               pd.product_owner,
+               pd.product_grade,
+               pd.sales_status,
+               pd.brand,
+               br.sessions_total,
+               br.units_order,
+               br.br_sales
+        from (select date,
+                     advertised_asin,
+                     MONTH(date)                                                               as month,
+                     WEEK(date, 1)                                                             as week,
+                     DATE_FORMAT(SUBDATE(date, (DATE_FORMAT(date, '%w') + 6) % 7), '%Y-%m-%d') as weekStart,
+                     DATE_FORMAT(SUBDATE(date, (DATE_FORMAT(date, '%w') - 7) % 7), '%Y-%m-%d') as weekEnd,
+                     DATE_FORMAT(date, '%w')                                                   as weekday,
+                     SUM(impressions)                                                          as impressions,
+                     SUM(clicks)                                                               as clicks,
+                     SUM(spend)                                                                as spend,
+                     SUM(seven_day_total_sales)                                                as sp_sales,
+                     SUM(seven_day_total_orders)                                               as orders,
+                     SUM(seven_day_total_units)                                                as units
+              from sp_ad_rp sp
+              group by date,
+                       advertised_asin) sp_result
+                 left join product_info pd on sp_result.advertised_asin = pd.asin
+                 right join (select date,
+                                    child_asin,
+                                    SUM(sessions_total) as sessions_total,
+                                    SUM(units_order)    as units_order,
+                                    SUM(sales)          as br_sales
+                             from business_report
+                             group by date, child_asin) br
+                            on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
+        where advertised_asin is null
     </select>
 </mapper>

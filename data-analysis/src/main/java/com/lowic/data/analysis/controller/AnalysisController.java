@@ -5,13 +5,13 @@ import cn.hutool.poi.excel.ExcelUtil;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.lowic.data.analysis.entity.BusinessReport;
 import com.lowic.data.analysis.entity.ImportOperateRecord;
-import com.lowic.data.analysis.entity.ProductionInfo;
+import com.lowic.data.analysis.entity.ProductInfo;
 import com.lowic.data.analysis.entity.SbCampRp;
 import com.lowic.data.analysis.entity.SbInfo;
 import com.lowic.data.analysis.entity.SdAdRp;
 import com.lowic.data.analysis.entity.SpAdRp;
 import com.lowic.data.analysis.mapper.BusinessReportMapper;
-import com.lowic.data.analysis.mapper.ProductionInfoMapper;
+import com.lowic.data.analysis.mapper.ProductInfoMapper;
 import com.lowic.data.analysis.mapper.SbCampRpMapper;
 import com.lowic.data.analysis.mapper.SbInfoMapper;
 import com.lowic.data.analysis.mapper.SdAdRpMapper;
@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Lowic
@@ -293,25 +294,25 @@ public class AnalysisController {
     public String uploadExcelForProductionInfo(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
         LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<ProductionInfo> productionInfoList = excelReader.read(0, 1, ProductionInfo.class);
+            List<ProductInfo> productInfoList = excelReader.read(1, 2, ProductInfo.class);
 
             SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            ProductionInfoMapper mapper = sqlSession.getMapper(ProductionInfoMapper.class);
+            ProductInfoMapper mapper = sqlSession.getMapper(ProductInfoMapper.class);
             // 每批次导入的最大数据
             int batchCount = 5000;
             // 每批最后一条数据下标等于批量大小
             int batchLastIndex = batchCount;
             // 批量插入   index 为 下标
-            for (int index = 0; index < productionInfoList.size(); ) {
+            for (int index = 0; index < productInfoList.size(); ) {
                 // 如果读取的数量大小 小于 批量大小
-                if (productionInfoList.size() < batchLastIndex) {
-                    batchLastIndex = productionInfoList.size();
-                    mapper.batchInsert(productionInfoList.subList(index, batchLastIndex));
+                if (productInfoList.size() < batchLastIndex) {
+                    batchLastIndex = productInfoList.size();
+                    mapper.batchInsert(productInfoList.subList(index, batchLastIndex));
                     // 清除缓存
                     sqlSession.clearCache();
                     break;
                 } else {
-                    mapper.batchInsert(productionInfoList.subList(index, batchLastIndex));
+                    mapper.batchInsert(productInfoList.subList(index, batchLastIndex));
                     // 清除缓存 防止溢出
                     sqlSession.clearCache();
                     index = batchLastIndex;
@@ -325,7 +326,7 @@ public class AnalysisController {
 
             LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(ProductionInfo.class.getAnnotation(TableName.class).value()).importCounts(productionInfoList.size())
+                    .targetTable(ProductInfo.class.getAnnotation(TableName.class).value()).importCounts(productInfoList.size())
                     .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
@@ -335,5 +336,11 @@ public class AnalysisController {
         }
 
         return "上传成功";
+    }
+
+    @RequestMapping("listSpAdRpContactBuRp")
+    public List<Map<String, String>> listSpAdRpContactBuRp(){
+
+        return iAnalysisService.listSpAdRpContactBuRp();
     }
 }
