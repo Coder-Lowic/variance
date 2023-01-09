@@ -83,4 +83,28 @@
               where advertised_asin is null) result
         order by date
     </select>
+
+    <select id="listSbInfoContactBuRp">
+        select *
+        from ((select date,
+                      category_one,
+                      sum(sessions_total) as sessions_total,
+                      sum(units_order)    as units_order,
+                      sum(sales)          as sales
+               from business_report
+                        left join product_info on business_report.child_asin = product_info.asin
+               group by date, category_one) bu_temp
+            left join
+            (select date,
+                    category_one,
+                    sum(impressions)               as impressions,
+                    sum(clicks)                    as clicks,
+                    sum(spend)                     as spend,
+                    sum(fourteen_day_total_sales)  as fourteen_day_total_sales,
+                    sum(fourteen_day_total_orders) as fourteen_day_total_orders
+             from sb_camp_rp
+                      left join sb_info on sb_camp_rp.campaign_name = sb_info.campaign_name
+             group by date, category_one) sb_temp
+              on bu_temp.category_one = sb_temp.category_one and bu_temp.date = sb_temp.datel)
+    </select>
 </mapper>
