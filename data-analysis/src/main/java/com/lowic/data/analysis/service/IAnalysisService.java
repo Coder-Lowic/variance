@@ -8,5 +8,5 @@ import java.util.List;
  * @author Lowic
  */
 public interface IAnalysisService {
-    List<SpCombineBr> listSpAdRpContactBuRp();
+    List<SpCombineBr> listSpAdRpAndSpAdRpContactBuRp();
 }

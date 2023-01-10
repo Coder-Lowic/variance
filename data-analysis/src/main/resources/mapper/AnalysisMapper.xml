@@ -1,110 +1,234 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.lowic.data.analysis.mapper.AnalysisMapper">
-    <select id="listSpAdRpContactBuRp" resultType="com.lowic.data.analysis.export.vo.SpCombineBr">
-        select *,
-               MONTH(date)                                                                         as month,
-               CONCAT(WEEK(date, 1), '(', DATE_FORMAT(SUBDATE(date, (DATE_FORMAT(date, '%w') + 6) % 7), '%m/%d'),
+    <sql id="spAdRpContactBuRp">
+        # （1）sp_ad_rp表根据advertised_asin按天做汇总后，以asin关联至product_info表
+        # （2）business_report表根据child_asin按天做汇总后，以child_asin + date 两个字段关联至（1）中结果表
+        select sp_result.date,
+               sp_result.advertised_asin,
+               sp_result.impressions,
+               sp_result.clicks,
+               sp_result.spend,
+               sp_result.sales,
+               sp_result.orders,
+               sp_result.units,
+               pd.category_one,
+               pd.category_two,
+               pd.shop,
+               pd.product_owner,
+               pd.product_grade,
+               pd.sales_status,
+               pd.brand,
+               br.sessions_total,
+               br.units_order,
+               br.product_sales,
+               MONTH(sp_result.date)             as month,
+               CONCAT(WEEK(sp_result.date, 1), '(',
+                      DATE_FORMAT(SUBDATE(sp_result.date, (DATE_FORMAT(sp_result.date, '%w') + 6) % 7), '%m/%d'),
                       '-',
-                      DATE_FORMAT(SUBDATE(date, (DATE_FORMAT(date, '%w') - 7) % 7), '%m/%d'), ')') as week,
-               DATE_FORMAT(date, '%w')                                                             as weekday
-        from (select sp_result.*,
-                     pd.category_one,
-                     pd.category_two,
-                     pd.shop,
-                     pd.product_owner,
-                     pd.product_grade,
-                     pd.sales_status,
-                     pd.brand,
-                     br.sessions_total,
-                     br.units_order,
-                     br.product_sales
-              from (select date,
-                           advertised_asin,
-                           SUM(impressions)            as impressions,
-                           SUM(clicks)                 as clicks,
-                           SUM(spend)                  as spend,
-                           SUM(seven_day_total_sales)  as sales,
-                           SUM(seven_day_total_orders) as orders,
-                           SUM(seven_day_total_units)  as units
-                    from sp_ad_rp sp
-                    group by date,
-                             advertised_asin) sp_result
-                       left join product_info pd on sp_result.advertised_asin = pd.asin
-                       left join (select date,
-                                         child_asin,
-                                         SUM(sessions_total) as sessions_total,
-                                         SUM(units_order)    as units_order,
-                                         SUM(sales)          as product_sales
-                                  from business_report
-                                  group by date, child_asin) br
-                                 on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
+                      DATE_FORMAT(SUBDATE(sp_result.date, (DATE_FORMAT(sp_result.date, '%w') - 7) % 7), '%m/%d'),
+                      ')')                       as week,
+               DATE_FORMAT(sp_result.date, '%w') as weekday
+        from (select date,
+                     advertised_asin,
+                     SUM(impressions)            as impressions,
+                     SUM(clicks)                 as clicks,
+                     SUM(spend)                  as spend,
+                     SUM(seven_day_total_sales)  as sales,
+                     SUM(seven_day_total_orders) as orders,
+                     SUM(seven_day_total_units)  as units
+              from sp_ad_rp sp
+              group by date,
+                       advertised_asin) sp_result
+                 left join product_info pd on sp_result.advertised_asin = pd.asin
+                 left join (select date,
+                                   child_asin,
+                                   SUM(sessions_total) as sessions_total,
+                                   SUM(units_order)    as units_order,
+                                   SUM(sales)          as product_sales
+                            from business_report
+                            group by date, child_asin) br
+                           on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
+    </sql>
 
-              union all
+    <sql id="sdAdRpContactBuRp">
+        # （1）sp_ad_rp表根据advertised_asin按天做汇总后，以asin关联至product_info表
+        # （2）business_report表根据child_asin按天做汇总后，以child_asin + date 两个字段关联至（1）中结果表
+        select sd_result.date,
+               sd_result.advertised_asin,
+               sd_result.impressions,
+               sd_result.clicks,
+               sd_result.spend,
+               sd_result.sales,
+               sd_result.orders,
+               sd_result.units,
+               pd.category_one,
+               pd.category_two,
+               pd.shop,
+               pd.product_owner,
+               pd.product_grade,
+               pd.sales_status,
+               pd.brand,
+               br.sessions_total,
+               br.units_order,
+               br.product_sales,
+               MONTH(sd_result.date)             as month,
+               CONCAT(WEEK(sd_result.date, 1), '(',
+                      DATE_FORMAT(SUBDATE(sd_result.date, (DATE_FORMAT(sd_result.date, '%w') + 6) % 7), '%m/%d'),
+                      '-',
+                      DATE_FORMAT(SUBDATE(sd_result.date, (DATE_FORMAT(sd_result.date, '%w') - 7) % 7), '%m/%d'),
+                      ')')                       as week,
+               DATE_FORMAT(sd_result.date, '%w') as weekday
+        from (select date,
+                     advertised_asin,
+                     SUM(impressions)               as impressions,
+                     SUM(clicks)                    as clicks,
+                     SUM(spend)                     as spend,
+                     SUM(fourteen_day_total_sales)  as sales,
+                     SUM(fourteen_day_total_orders) as orders,
+                     SUM(fourteen_day_total_units)  as units
+              from sd_ad_rp sd
+              group by date,
+                       advertised_asin) sd_result
+                 left join product_info pd on sd_result.advertised_asin = pd.asin
+                 left join (select date,
+                                   child_asin,
+                                   SUM(sessions_total) as sessions_total,
+                                   SUM(units_order)    as units_order,
+                                   SUM(sales)          as product_sales
+                            from business_report
+                            group by date, child_asin) br
+                           on sd_result.advertised_asin = br.child_asin and sd_result.date = br.date
+    </sql>
 
-              select br.date,
-                     br.child_asin,
-                     sp_result.impressions,
-                     sp_result.clicks,
-                     sp_result.spend,
-                     sp_result.sales,
-                     sp_result.orders,
-                     sp_result.units,
-                     pd.category_one,
-                     pd.category_two,
-                     pd.shop,
-                     pd.product_owner,
-                     pd.product_grade,
-                     pd.sales_status,
-                     pd.brand,
-                     br.sessions_total,
-                     br.units_order,
-                     br.product_sales
-              from (select date,
-                           advertised_asin,
-                           SUM(impressions)            as impressions,
-                           SUM(clicks)                 as clicks,
-                           SUM(spend)                  as spend,
-                           SUM(seven_day_total_sales)  as sales,
-                           SUM(seven_day_total_orders) as orders,
-                           SUM(seven_day_total_units)  as units
-                    from sp_ad_rp sp
-                    group by date,
-                             advertised_asin) sp_result
-                       left join product_info pd on sp_result.advertised_asin = pd.asin
-                       right join (select date,
-                                          child_asin,
-                                          SUM(sessions_total) as sessions_total,
-                                          SUM(units_order)    as units_order,
-                                          SUM(sales)          as product_sales
-                                   from business_report
-                                   group by date, child_asin) br
-                                  on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
-              where advertised_asin is null) result
+    <select id="listSpAdRpAndSpAdRpContactBuRp" resultType="com.lowic.data.analysis.export.vo.SpCombineBr">
+        select * from (
+        <include refid="spAdRpContactBuRp"/>
+        union all
+        <include refid="sdAdRpContactBuRp"/>) result
         order by date
     </select>
 
     <select id="listSbInfoContactBuRp">
-        select *
-        from ((select date,
-                      category_one,
-                      sum(sessions_total) as sessions_total,
-                      sum(units_order)    as units_order,
-                      sum(sales)          as sales
-               from business_report
-                        left join product_info on business_report.child_asin = product_info.asin
-               group by date, category_one) bu_temp
-            left join
-            (select date,
-                    category_one,
-                    sum(impressions)               as impressions,
-                    sum(clicks)                    as clicks,
-                    sum(spend)                     as spend,
-                    sum(fourteen_day_total_sales)  as fourteen_day_total_sales,
-                    sum(fourteen_day_total_orders) as fourteen_day_total_orders
-             from sb_camp_rp
-                      left join sb_info on sb_camp_rp.campaign_name = sb_info.campaign_name
-             group by date, category_one) sb_temp
-              on bu_temp.category_one = sb_temp.category_one and bu_temp.date = sb_temp.datel)
+        select date,
+               category_one,
+               SUM(sessions_total) as sessions_total,
+               SUM(units_order)    as units_order,
+               SUM(product_sales)  as product_sales,
+               SUM(impressions)    as impressions,
+               SUM(clicks)         as clicks,
+               SUM(spend)          as spend,
+               SUM(sales)          as sales,
+               SUM(orders)         as orders,
+               SUM(units)          as units
+        from (select bu_temp.date,
+                     bu_temp.category_one,
+                     sessions_total,
+                     units_order,
+                     product_sales,
+                     impressions,
+                     clicks,
+                     spend,
+                     sales,
+                     orders,
+                     units
+              from ((select date,
+                            category_one,
+                            SUM(sessions_total) as sessions_total,
+                            SUM(units_order)    as units_order,
+                            SUM(sales)          as product_sales
+                     from business_report
+                              left join product_info on business_report.child_asin = product_info.asin
+                     group by date, category_one) bu_temp
+                  inner join
+                  (select date,
+                          category_one,
+                          SUM(impressions)               as impressions,
+                          SUM(clicks)                    as clicks,
+                          SUM(spend)                     as spend,
+                          SUM(fourteen_day_total_sales)  as sales,
+                          SUM(fourteen_day_total_orders) as orders,
+                          SUM(fourteen_day_total_units)  as units
+                   from sb_camp_rp
+                            left join sb_info on sb_camp_rp.campaign_name = sb_info.campaign_name
+                   group by date, category_one) sb_temp
+                    on bu_temp.category_one = sb_temp.category_one and bu_temp.date = sb_temp.date)
+
+              union all
+
+              select *,
+                     null as sessions_total,
+                     null as units_order,
+                     null as product_sales
+              from (select date,
+                           category_one,
+                           SUM(impressions) as impressions,
+                           SUM(clicks)      as clicks,
+                           SUM(spend)       as spend,
+                           SUM(sales)       as sales,
+                           SUM(orders)      as orders,
+                           SUM(units)       as units
+                    from (select sp_result.date,
+                                 sp_result.impressions,
+                                 sp_result.clicks,
+                                 sp_result.spend,
+                                 sp_result.sales,
+                                 sp_result.orders,
+                                 sp_result.units,
+                                 pd.category_one
+                          from (select date,
+                                       advertised_asin,
+                                       SUM(impressions)            as impressions,
+                                       SUM(clicks)                 as clicks,
+                                       SUM(spend)                  as spend,
+                                       SUM(seven_day_total_sales)  as sales,
+                                       SUM(seven_day_total_orders) as orders,
+                                       SUM(seven_day_total_units)  as units
+                                from sp_ad_rp sp
+                                group by date,
+                                         advertised_asin) sp_result
+                                   left join product_info pd on sp_result.advertised_asin = pd.asin
+                                   left join (select date,
+                                                     child_asin,
+                                                     SUM(sessions_total) as sessions_total,
+                                                     SUM(units_order)    as units_order,
+                                                     SUM(sales)          as product_sales
+                                              from business_report
+                                              group by date, child_asin) br
+                                             on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
+
+                          union all
+
+                          select br.date,
+                                 sp_result.impressions,
+                                 sp_result.clicks,
+                                 sp_result.spend,
+                                 sp_result.sales,
+                                 sp_result.orders,
+                                 sp_result.units,
+                                 pd.category_one
+                          from (select date,
+                                       advertised_asin,
+                                       SUM(impressions)            as impressions,
+                                       SUM(clicks)                 as clicks,
+                                       SUM(spend)                  as spend,
+                                       SUM(seven_day_total_sales)  as sales,
+                                       SUM(seven_day_total_orders) as orders,
+                                       SUM(seven_day_total_units)  as units
+                                from sp_ad_rp sp
+                                group by date,
+                                         advertised_asin) sp_result
+                                   left join product_info pd on sp_result.advertised_asin = pd.asin
+                                   right join (select date,
+                                                      child_asin,
+                                                      SUM(sessions_total) as sessions_total,
+                                                      SUM(units_order)    as units_order,
+                                                      SUM(sales)          as product_sales
+                                               from business_report
+                                               group by date, child_asin) br
+                                              on sp_result.advertised_asin = br.child_asin and sp_result.date = br.date
+                          where advertised_asin is null) result_1
+                    group by date, category_one) result_2) result_3
+        group by date, category_one
     </select>
 </mapper>

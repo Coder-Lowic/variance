@@ -17,7 +17,7 @@ public class AnalysisServiceImpl implements IAnalysisService {
     private AnalysisMapper analysisMapper;
 
     @Override
-    public List<SpCombineBr> listSpAdRpContactBuRp() {
-        return analysisMapper.listSpAdRpContactBuRp();
+    public List<SpCombineBr> listSpAdRpAndSpAdRpContactBuRp() {
+        return analysisMapper.listSpAdRpAndSpAdRpContactBuRp();
     }
 }

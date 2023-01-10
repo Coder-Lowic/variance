@@ -19,7 +19,7 @@ public interface AnalysisMapper {
      *
      * @return 按天和asin汇总的数据
      */
-    List<SpCombineBr> listSpAdRpContactBuRp();
+    List<SpCombineBr> listSpAdRpAndSpAdRpContactBuRp();
 
     /**
      * 关联查询 sb_info 和 business_report 表

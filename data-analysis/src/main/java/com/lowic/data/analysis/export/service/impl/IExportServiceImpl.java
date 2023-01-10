@@ -19,6 +19,6 @@ public class IExportServiceImpl implements IExportService {
     @Override
     public List<SpCombineBr> assembleExportList() {
 
-        return iAnalysisService.listSpAdRpContactBuRp();
+        return iAnalysisService.listSpAdRpAndSpAdRpContactBuRp();
     }
 }
