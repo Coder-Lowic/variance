@@ -1,7 +1,8 @@
 package com.lowic.data.analysis.export.service.impl;
 
 import com.lowic.data.analysis.export.service.IExportService;
-import com.lowic.data.analysis.export.vo.SpCombineBr;
+import com.lowic.data.analysis.export.vo.SbCampAndSpOrSdCombineBr;
+import com.lowic.data.analysis.export.vo.SpOrSdCombineBr;
 import com.lowic.data.analysis.service.IAnalysisService;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,13 @@ public class IExportServiceImpl implements IExportService {
     private IAnalysisService iAnalysisService;
 
     @Override
-    public List<SpCombineBr> assembleExportList() {
+    public List<SpOrSdCombineBr> assembleSpAndSdCombineBuRpExportList() {
 
-        return iAnalysisService.listSpAdRpAndSpAdRpContactBuRp();
+        return iAnalysisService.listSpAdRpAndSpAdRpCombineBuRp();
+    }
+
+    @Override
+    public List<SbCampAndSpOrSdCombineBr> assembleSbCampAndSpAndSdCombineBuRpExportList() {
+        return iAnalysisService.listSbCampAndSpAndSdCombineBuRp();
     }
 }

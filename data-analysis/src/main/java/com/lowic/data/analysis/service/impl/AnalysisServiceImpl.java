@@ -1,6 +1,7 @@
 package com.lowic.data.analysis.service.impl;
 
-import com.lowic.data.analysis.export.vo.SpCombineBr;
+import com.lowic.data.analysis.export.vo.SbCampAndSpOrSdCombineBr;
+import com.lowic.data.analysis.export.vo.SpOrSdCombineBr;
 import com.lowic.data.analysis.mapper.AnalysisMapper;
 import com.lowic.data.analysis.service.IAnalysisService;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,12 @@ public class AnalysisServiceImpl implements IAnalysisService {
     private AnalysisMapper analysisMapper;
 
     @Override
-    public List<SpCombineBr> listSpAdRpAndSpAdRpContactBuRp() {
-        return analysisMapper.listSpAdRpAndSpAdRpContactBuRp();
+    public List<SpOrSdCombineBr> listSpAdRpAndSpAdRpCombineBuRp() {
+        return analysisMapper.listSpAdRpAndSpAdRpCombineBuRp();
+    }
+
+    @Override
+    public List<SbCampAndSpOrSdCombineBr> listSbCampAndSpAndSdCombineBuRp() {
+        return analysisMapper.listSbCampAndSpAndSdCombineBuRp();
     }
 }

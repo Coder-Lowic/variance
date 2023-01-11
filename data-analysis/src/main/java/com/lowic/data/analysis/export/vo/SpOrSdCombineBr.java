@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @ToString
-public class SpCombineBr implements Serializable {
+public class SpOrSdCombineBr implements Serializable {
     private LocalDateTime date;
 
     private String advertisedAsin;

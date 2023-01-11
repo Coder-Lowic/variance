@@ -1,6 +1,7 @@
 package com.lowic.data.analysis.export.service;
 
-import com.lowic.data.analysis.export.vo.SpCombineBr;
+import com.lowic.data.analysis.export.vo.SbCampAndSpOrSdCombineBr;
+import com.lowic.data.analysis.export.vo.SpOrSdCombineBr;
 
 import java.util.List;
 
@@ -8,5 +9,17 @@ import java.util.List;
  * @author Lowic
  */
 public interface IExportService {
-    List<SpCombineBr> assembleExportList();
+    /**
+     * 组装待导出的数据
+     *
+     * @return 组装好的数据
+     */
+    List<SpOrSdCombineBr> assembleSpAndSdCombineBuRpExportList();
+
+    /**
+     * 组装待导出的数据
+     *
+     * @return 组装好的数据
+     */
+    List<SbCampAndSpOrSdCombineBr> assembleSbCampAndSpAndSdCombineBuRpExportList();
 }
