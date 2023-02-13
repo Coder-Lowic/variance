@@ -1,24 +1,19 @@
-server:
-  port: 9999
-
-
-spring:
-  datasource:
-    url:
-    username:
-    password:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 1000MB
-
-logging:
-  level:
-    root: info
-    sql: debug
-    web: debug
-    com.lowic.data.analysis: DEBUG
-    com.baomidou.mybatisplus: DEBUG
-
-
+#server:
+#  port: 8888
+#
+#
+#spring:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#  servlet:
+#    multipart:
+#      max-file-size: 100MB
+#      max-request-size: 1000MB
+#
+#logging:
+#  level:
+#    root: info
+#    sql: debug
+#    web: debug
+#    com.lowic.data.analysis: DEBUG
+#    com.baomidou.mybatisplus: DEBUG
