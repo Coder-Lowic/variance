@@ -18,6 +18,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spring-boot-dependencies.version>2.4.13</spring-boot-dependencies.version>
         <spring-cloud.version>2020.0.2</spring-cloud.version>
@@ -29,6 +30,8 @@
         <hutool.version>5.5.8</hutool.version>
         <poi-ooxml.version>5.1.0</poi-ooxml.version>
         <swagger.version>2.0.2.RELEASE</swagger.version>
+
+        <org.mapstruct.extensions.spring.version>1.0.0</org.mapstruct.extensions.spring.version>
     </properties>
 
     <dependencyManagement>
@@ -83,6 +86,34 @@
                 <artifactId>swagger-spring-boot-starter</artifactId>
                 <version>${swagger.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.mapstruct.extensions.spring</groupId>
+                <artifactId>mapstruct-spring-annotations</artifactId>
+                <version>${org.mapstruct.extensions.spring.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct.extensions.spring</groupId>
+                            <artifactId>mapstruct-spring-extensions</artifactId>
+                            <version>${org.mapstruct.extensions.spring.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
