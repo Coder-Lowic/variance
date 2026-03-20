@@ -13,7 +13,6 @@
         <module>variance-web</module>
         <module>variance-service</module>
         <module>data-analysis</module>
-        <module>prepaid-cards</module>
         <module>ai-service</module>
     </modules>
 
