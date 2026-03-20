@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class DataAnalysisAIService {
 
-    private final ChatClient chatClient;
+    private final ModelManagerService modelManagerService;
 
-    public DataAnalysisAIService(ChatClient chatClient) {
-        this.chatClient = chatClient;
+    public DataAnalysisAIService(ModelManagerService modelManagerService) {
+        this.modelManagerService = modelManagerService;
     }
 
     public String generateAnalysisReport(String dataDescription) {
@@ -19,6 +19,7 @@ public class DataAnalysisAIService {
                 请用中文回复，保持专业、客观、有建设性。
                 """;
 
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
         return chatClient.prompt()
                 .system(systemPrompt)
                 .user(dataDescription)
@@ -32,6 +33,7 @@ public class DataAnalysisAIService {
                 请指出异常的具体位置、可能的原因，并提供处理建议。
                 """;
 
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
         return chatClient.prompt()
                 .system(systemPrompt)
                 .user(data)
@@ -45,6 +47,7 @@ public class DataAnalysisAIService {
                 请说明预测依据、预测结果、置信度以及潜在风险因素。
                 """;
 
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
         return chatClient.prompt()
                 .system(systemPrompt)
                 .user(historicalData)

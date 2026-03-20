@@ -1,8 +1,6 @@
 package com.lowic.ai.service;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -14,11 +12,11 @@ import java.util.stream.Collectors;
 @Service
 public class RagService {
 
-    private final ChatClient chatClient;
+    private final ModelManagerService modelManagerService;
     private final VectorStore vectorStore;
 
-    public RagService(ChatClient chatClient, VectorStore vectorStore) {
-        this.chatClient = chatClient;
+    public RagService(ModelManagerService modelManagerService, VectorStore vectorStore) {
+        this.modelManagerService = modelManagerService;
         this.vectorStore = vectorStore;
     }
 
@@ -44,6 +42,7 @@ public class RagService {
                 用户问题：%s
                 """, context, query);
 
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
         return chatClient.prompt()
                 .user(prompt)
                 .call()

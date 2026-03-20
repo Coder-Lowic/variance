@@ -3,7 +3,7 @@ spring:
     name: ai-service
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:your-api-key-here}
+      api-key: ${OPENAI_API_KEY:}
       chat:
         options:
           model: gpt-4
@@ -11,6 +11,22 @@ spring:
       embedding:
         options:
           model: text-embedding-ada-002
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: claude-3-opus-20240229
+    vertex-ai:
+      gemini:
+        api-key: ${GEMINI_API_KEY:}
+        chat:
+          options:
+            model: gemini-pro
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: llama3
     vectorstore:
       pgvector:
         jdbc-url: jdbc:postgresql://localhost:5432/vector_db

@@ -7,7 +7,8 @@ Variance 是一个现代化的智能数据分析平台，深度集成 **Spring A
 ## ✨ 核心特性
 
 ### 🤖 Spring AI 原生集成
-- **大语言模型支持**：原生支持 OpenAI GPT-4、Claude、Llama 3 等主流大模型
+- **多模型支持**：原生支持 OpenAI GPT-4、Anthropic Claude、Google Gemini、Ollama 等主流大模型
+- **灵活切换**：运行时动态切换模型提供商，无需重启服务
 - **向量数据库**：集成 PGVector、Milvus 等向量存储，支持 RAG 检索增强生成
 - **Chat Client**：Spring AI 高级 ChatClient，支持流式输出、函数调用
 - **多模态支持**：文本、图像、PDF 等多格式文档解析与处理
@@ -38,7 +39,7 @@ Variance 是一个现代化的智能数据分析平台，深度集成 **Spring A
 ### 核心技术栈
 - **后端框架**：Spring Boot 3.2.5 + Spring AI 1.0.0-M5 + JDK 17
 - **持久层**：MyBatis-Plus 3.5.5
-- **AI框架**：Spring AI (OpenAI、PGVector)
+- **AI框架**：Spring AI (OpenAI、Anthropic、Google Gemini、Ollama、PGVector)
 - **文档API**：SpringDoc OpenAPI 3.0
 - **工具生态**：Hutool 5.8.26、Apache POI 5.2.5
 - **对象映射**：MapStruct 1.1.0
@@ -111,6 +112,8 @@ variance/
 - [x] 集成 PGVector 向量数据库
 - [x] 实现 RAG 检索增强生成
 - [x] Swagger → SpringDoc OpenAPI 3.0
+- [x] 多模型支持 (OpenAI、Anthropic、Gemini、Ollama)
+- [x] 运行时模型动态切换
 
 ### Phase 3: 智能分析引擎 🚧
 - [ ] AI智能报表生成
@@ -141,7 +144,7 @@ variance/
 spring:
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:your-api-key-here}
+      api-key: ${OPENAI_API_KEY:}
       chat:
         options:
           model: gpt-4
@@ -149,11 +152,60 @@ spring:
       embedding:
         options:
           model: text-embedding-ada-002
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: claude-3-opus-20240229
+    vertex-ai:
+      gemini:
+        api-key: ${GEMINI_API_KEY:}
+        chat:
+          options:
+            model: gemini-pro
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: llama3
     vectorstore:
       pgvector:
         jdbc-url: jdbc:postgresql://localhost:5432/vector_db
         username: postgres
         password: postgres
+```
+
+#### 模型切换 API
+```bash
+# 查看当前模型
+GET /api/ai/model/current
+
+# 查看可用模型列表
+GET /api/ai/model/available
+
+# 切换到 OpenAI GPT-4
+POST /api/ai/model/switch/openai?modelName=gpt-4
+
+# 切换到 Anthropic Claude
+POST /api/ai/model/switch/anthropic?modelName=claude-3-opus-20240229
+
+# 切换到 Google Gemini
+POST /api/ai/model/switch/gemini?modelName=gemini-pro
+
+# 切换到 Ollama 本地模型
+POST /api/ai/model/switch/ollama?modelName=llama3&baseUrl=http://localhost:11434
+
+# 自定义模型配置
+POST /api/ai/model/switch/custom
+Content-Type: application/json
+{
+  "provider": "openai",
+  "modelName": "gpt-4",
+  "temperature": 0.7,
+  "maxTokens": 2048,
+  "apiKey": "your-custom-api-key",
+  "baseUrl": "https://your-custom-endpoint.com"
+}
 ```
 
 ### 核心 API 端点
