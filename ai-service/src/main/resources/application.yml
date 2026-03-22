@@ -1,6 +1,12 @@
 spring:
   application:
     name: ai-service
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB
   ai:
     openai:
       api-key: ${OPENAI_API_KEY:}

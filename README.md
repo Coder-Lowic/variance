@@ -11,6 +11,7 @@ Variance 是一个现代化的智能数据分析平台，深度集成 **Spring A
 - **灵活切换**：运行时动态切换模型提供商，无需重启服务
 - **向量数据库**：集成 PGVector、Milvus 等向量存储，支持 RAG 检索增强生成
 - **Chat Client**：Spring AI 高级 ChatClient，支持流式输出、函数调用
+- **附件对话**：支持上传 PDF、Word、Excel、TXT、Markdown 等多种格式附件进行对话
 - **多模态支持**：文本、图像、PDF 等多格式文档解析与处理
 
 ### 📊 智能数据处理
@@ -114,6 +115,7 @@ variance/
 - [x] Swagger → SpringDoc OpenAPI 3.0
 - [x] 多模型支持 (OpenAI、Anthropic、Gemini、Ollama)
 - [x] 运行时模型动态切换
+- [x] 附件对话功能 (PDF、Word、Excel、TXT、Markdown)
 
 ### Phase 3: 智能分析引擎 🚧
 - [ ] AI智能报表生成
@@ -213,6 +215,30 @@ Content-Type: application/json
 #### AI 对话服务
 - `POST /api/ai/chat` - 基础对话
 - `POST /api/ai/chat/system` - 带系统提示的对话
+- `POST /api/ai/chat/attachment` - 带附件的对话
+- `POST /api/ai/chat/attachment/system` - 带附件和系统提示的对话
+- `GET /api/ai/chat/supported-formats` - 获取支持的文件格式
+
+#### 附件对话 API 使用示例
+```bash
+# 查看支持的文件格式
+GET /api/ai/chat/supported-formats
+
+# 上传附件并对话 (PDF/Word/Excel/TXT/MD)
+POST /api/ai/chat/attachment
+Content-Type: multipart/form-data
+Form-Data:
+  message: "请总结这个文档的主要内容"
+  file: @document.pdf
+
+# 带系统提示的附件对话
+POST /api/ai/chat/attachment/system
+Content-Type: multipart/form-data
+Form-Data:
+  systemPrompt: "你是一位专业的数据分析师"
+  message: "请分析这个Excel表格中的数据"
+  file: @data.xlsx
+```
 
 #### RAG 检索服务
 - `POST /api/ai/rag/documents` - 添加文档到向量库
