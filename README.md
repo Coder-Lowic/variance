@@ -12,6 +12,7 @@ Variance 是一个现代化的智能数据分析平台，深度集成 **Spring A
 - **向量数据库**：集成 PGVector、Milvus 等向量存储，支持 RAG 检索增强生成
 - **Chat Client**：Spring AI 高级 ChatClient，支持流式输出、函数调用
 - **附件对话**：支持上传 PDF、Word、Excel、TXT、Markdown 等多种格式附件进行对话
+- **图片对话**：支持上传 JPG、PNG、GIF、BMP、WebP 等图片格式进行多模态对话
 - **多模态支持**：文本、图像、PDF 等多格式文档解析与处理
 
 ### 📊 智能数据处理
@@ -116,12 +117,13 @@ variance/
 - [x] 多模型支持 (OpenAI、Anthropic、Gemini、Ollama)
 - [x] 运行时模型动态切换
 - [x] 附件对话功能 (PDF、Word、Excel、TXT、Markdown)
+- [x] 图片对话功能 (JPG、PNG、GIF、BMP、WebP)
 
 ### Phase 3: 智能分析引擎 🚧
 - [ ] AI智能报表生成
 - [ ] 数据趋势预测
 - [ ] 异常检测与告警
-- [ ] 多模态数据支持
+- [x] 多模态数据支持
 - [ ] 函数调用与工具集成
 
 ### Phase 4: 企业级平台 🔮
@@ -217,6 +219,8 @@ Content-Type: application/json
 - `POST /api/ai/chat/system` - 带系统提示的对话
 - `POST /api/ai/chat/attachment` - 带附件的对话
 - `POST /api/ai/chat/attachment/system` - 带附件和系统提示的对话
+- `POST /api/ai/chat/image` - 带图片的对话
+- `POST /api/ai/chat/image/system` - 带图片和系统提示的对话
 - `GET /api/ai/chat/supported-formats` - 获取支持的文件格式
 
 #### 附件对话 API 使用示例
@@ -238,6 +242,24 @@ Form-Data:
   systemPrompt: "你是一位专业的数据分析师"
   message: "请分析这个Excel表格中的数据"
   file: @data.xlsx
+```
+
+#### 图片对话 API 使用示例
+```bash
+# 上传图片并对话 (JPG/PNG/GIF/BMP/WebP)
+POST /api/ai/chat/image
+Content-Type: multipart/form-data
+Form-Data:
+  message: "请描述这张图片的内容"
+  file: @photo.jpg
+
+# 带系统提示的图片对话
+POST /api/ai/chat/image/system
+Content-Type: multipart/form-data
+Form-Data:
+  systemPrompt: "你是一位专业的图像识别专家"
+  message: "请识别这张图片中的物体"
+  file: @image.png
 ```
 
 #### RAG 检索服务

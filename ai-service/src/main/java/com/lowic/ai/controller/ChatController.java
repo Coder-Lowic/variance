@@ -60,12 +60,33 @@ public class ChatController {
         return chatService.chatWithAttachmentAndSystemPrompt(systemPrompt, message, attachmentContent, filename);
     }
 
+    @Operation(summary = "带图片的对话", description = "上传图片并基于图片内容进行对话")
+    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String chatWithImage(
+            @RequestParam String message,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String imageBase64 = documentParserService.parseDocument(file);
+        String filename = file.getOriginalFilename();
+        return chatService.chatWithImage(message, imageBase64, filename);
+    }
+
+    @Operation(summary = "带图片和系统提示的对话", description = "上传图片并基于图片内容和自定义系统提示进行对话")
+    @PostMapping(value = "/image/system", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String chatWithImageAndSystemPrompt(
+            @RequestParam String systemPrompt,
+            @RequestParam String message,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        String imageBase64 = documentParserService.parseDocument(file);
+        String filename = file.getOriginalFilename();
+        return chatService.chatWithImageAndSystemPrompt(systemPrompt, message, imageBase64, filename);
+    }
+
     @Operation(summary = "获取支持的文件格式", description = "获取系统支持的附件文件格式列表")
     @GetMapping("/supported-formats")
     public Map<String, Object> getSupportedFormats() {
         Map<String, Object> result = new HashMap<>();
         result.put("formats", documentParserService.getSupportedFormats());
-        result.put("description", "支持的文件格式：PDF、Word文档、Excel表格、纯文本、Markdown");
+        result.put("description", "支持的文件格式：PDF、Word文档、Excel表格、纯文本、Markdown、图片(JPG/PNG/GIF/BMP/WebP)");
         return result;
     }
 }

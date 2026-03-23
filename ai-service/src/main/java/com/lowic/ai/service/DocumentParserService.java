@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Slf4j
@@ -35,6 +36,7 @@ public class DocumentParserService {
             case "xlsx", "xls" -> parseExcel(file);
             case "txt" -> parseTxt(file);
             case "md" -> parseMarkdown(file);
+            case "jpg", "jpeg", "png", "gif", "bmp", "webp" -> parseImage(file);
             default -> throw new IllegalArgumentException("不支持的文件格式: " + extension);
         };
     }
@@ -120,6 +122,26 @@ public class DocumentParserService {
         return new String(file.getBytes());
     }
 
+    private String parseImage(MultipartFile file) throws IOException {
+        String extension = getFileExtension(file.getOriginalFilename()).toLowerCase();
+        String mimeType = getImageMimeType(extension);
+        byte[] imageBytes = file.getBytes();
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        
+        return String.format("data:%s;base64,%s", mimeType, base64Image);
+    }
+
+    private String getImageMimeType(String extension) {
+        return switch (extension) {
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            case "bmp" -> "image/bmp";
+            case "webp" -> "image/webp";
+            default -> "image/jpeg";
+        };
+    }
+
     private String getFileExtension(String filename) {
         int lastDotIndex = filename.lastIndexOf('.');
         if (lastDotIndex == -1) {
@@ -128,7 +150,16 @@ public class DocumentParserService {
         return filename.substring(lastDotIndex + 1);
     }
 
+    public boolean isImageFile(MultipartFile file) {
+        String filename = file.getOriginalFilename();
+        if (filename == null) {
+            return false;
+        }
+        String extension = getFileExtension(filename).toLowerCase();
+        return List.of("jpg", "jpeg", "png", "gif", "bmp", "webp").contains(extension);
+    }
+
     public List<String> getSupportedFormats() {
-        return List.of("pdf", "docx", "xlsx", "xls", "txt", "md");
+        return List.of("pdf", "docx", "xlsx", "xls", "txt", "md", "jpg", "jpeg", "png", "gif", "bmp", "webp");
     }
 }
