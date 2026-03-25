@@ -4,16 +4,20 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Media;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
 public class ChatService {
 
     private final ModelManagerService modelManagerService;
+    private final SpeechToTextService speechToTextService;
 
-    public ChatService(ModelManagerService modelManagerService) {
+    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService) {
         this.modelManagerService = modelManagerService;
+        this.speechToTextService = speechToTextService;
     }
 
     public String chat(String message) {
@@ -92,4 +96,15 @@ public class ChatService {
                 .call()
                 .content();
     }
+
+    public String chatWithVoice(MultipartFile audioFile, String model) throws IOException {
+        String text = speechToTextService.transcribe(audioFile, model);
+        return chat(text);
+    }
+
+    public String chatWithVoiceAndSystemPrompt(String systemPrompt, MultipartFile audioFile, String model) throws IOException {
+        String text = speechToTextService.transcribe(audioFile, model);
+        return chatWithSystemPrompt(systemPrompt, text);
+    }
 }
+

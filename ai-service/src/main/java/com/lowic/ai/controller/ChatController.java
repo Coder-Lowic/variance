@@ -89,4 +89,33 @@ public class ChatController {
         result.put("description", "支持的文件格式：PDF、Word文档、Excel表格、纯文本、Markdown、图片(JPG/PNG/GIF/BMP/WebP)");
         return result;
     }
+
+    @Operation(summary = "语音输入对话", description = "上传音频文件并基于语音内容进行对话")
+    @PostMapping(value = "/voice", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String chatWithVoice(
+            @RequestParam(value = "model", defaultValue = "whisper") String model,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return chatService.chatWithVoice(file, model);
+    }
+
+    @Operation(summary = "带系统提示的语音输入对话", description = "上传音频文件并基于语音内容和自定义系统提示进行对话")
+    @PostMapping(value = "/voice/system", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public String chatWithVoiceAndSystemPrompt(
+            @RequestParam String systemPrompt,
+            @RequestParam(value = "model", defaultValue = "whisper") String model,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return chatService.chatWithVoiceAndSystemPrompt(systemPrompt, file, model);
+    }
+
+    @Operation(summary = "获取支持的语音模型", description = "获取系统支持的语音识别模型列表")
+    @GetMapping("/supported-voice-models")
+    public Map<String, Object> getSupportedVoiceModels() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("models", Map.of(
+                "whisper", "OpenAI Whisper 语音识别模型",
+                "ollama", "Ollama 本地语音识别模型"
+        ));
+        result.put("description", "支持的语音模型：Whisper (在线)、Ollama (本地)");
+        return result;
+    }
 }

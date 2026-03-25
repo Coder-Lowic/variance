@@ -13,7 +13,8 @@ Variance 是一个现代化的智能数据分析平台，深度集成 **Spring A
 - **Chat Client**：Spring AI 高级 ChatClient，支持流式输出、函数调用
 - **附件对话**：支持上传 PDF、Word、Excel、TXT、Markdown 等多种格式附件进行对话
 - **图片对话**：支持上传 JPG、PNG、GIF、BMP、WebP 等图片格式进行多模态对话
-- **多模态支持**：文本、图像、PDF 等多格式文档解析与处理
+- **语音输入**：支持上传音频文件，使用 Whisper 或 Ollama 进行语音识别
+- **多模态支持**：文本、图像、PDF、语音等多格式内容解析与处理
 
 ### 📊 智能数据处理
 - **自动化数据导入**：支持Excel、CSV等多格式数据的智能解析与入库
@@ -118,6 +119,7 @@ variance/
 - [x] 运行时模型动态切换
 - [x] 附件对话功能 (PDF、Word、Excel、TXT、Markdown)
 - [x] 图片对话功能 (JPG、PNG、GIF、BMP、WebP)
+- [x] 语音输入功能 (Whisper、Ollama 语音识别)
 
 ### Phase 3: 智能分析引擎 🚧
 - [ ] AI智能报表生成
