@@ -1,14 +1,10 @@
 package com.lowic.data.analysis.config;
 
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class DataAnalysisAiConfig {
 
-    @Bean
-    public ChatClient chatClient(ChatClient.Builder builder) {
-        return builder.build();
-    }
+    // 暂时移除ChatClient配置，因为Spring AI 1.0.0-M5版本的配置方式不同
 }
+
