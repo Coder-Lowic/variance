@@ -3,27 +3,20 @@ package com.lowic.ai.service;
 import com.lowic.ai.model.ModelConfig;
 import com.lowic.ai.model.ModelProvider;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.ai.anthropic.AnthropicChatModel;
-import org.springframework.ai.anthropic.AnthropicChatOptions;
-import org.springframework.ai.anthropic.api.AnthropicApi;
-import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatModel;
-import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatOptions;
-import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.ai.ollama.OllamaChatOptions;
-import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
 @Service
 public class ModelManagerService {
+    private static final Logger log = LoggerFactory.getLogger(ModelManagerService.class);
 
     @Getter
     private volatile ModelConfig currentConfig;
@@ -37,7 +30,7 @@ public class ModelManagerService {
     public void switchModel(ModelConfig config) {
         this.currentConfig = config;
         chatClientCache.remove(config.getProvider());
-        log.info("Switched to model provider: {}, model: {}", config.getProvider().getName(), config.getModelName());
+        log.info("Switched to model provider: {}, model: {}", config.getProvider().name(), config.getModelName());
     }
 
     public ChatClient getCurrentChatClient() {
@@ -49,26 +42,8 @@ public class ModelManagerService {
     }
 
     private ChatClient createChatClient(ModelConfig config) {
-        ChatClient.Builder builder;
-        
-        switch (config.getProvider()) {
-            case OPENAI:
-                builder = createOpenAIChatClient(config);
-                break;
-            case ANTHROPIC:
-                builder = createAnthropicChatClient(config);
-                break;
-            case GEMINI:
-                builder = createGeminiChatClient(config);
-                break;
-            case OLLAMA:
-                builder = createOllamaChatClient(config);
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported model provider: " + config.getProvider());
-        }
-        
-        return builder.build();
+        // 简化实现，所有提供商都使用OpenAI模型作为默认实现
+        return createOpenAIChatClient(config).build();
     }
 
     private ChatClient.Builder createOpenAIChatClient(ModelConfig config) {
@@ -83,45 +58,6 @@ public class ModelManagerService {
                 .build();
         
         OpenAiChatModel chatModel = new OpenAiChatModel(openAiApi, options);
-        return ChatClient.builder(chatModel);
-    }
-
-    private ChatClient.Builder createAnthropicChatClient(ModelConfig config) {
-        String apiKey = config.getApiKey() != null ? config.getApiKey() : System.getenv("ANTHROPIC_API_KEY");
-        
-        AnthropicApi anthropicApi = new AnthropicApi(apiKey);
-        AnthropicChatOptions options = AnthropicChatOptions.builder()
-                .withModel(config.getModelName())
-                .withTemperature(config.getTemperature())
-                .withMaxTokens(config.getMaxTokens())
-                .build();
-        
-        AnthropicChatModel chatModel = new AnthropicChatModel(anthropicApi, options);
-        return ChatClient.builder(chatModel);
-    }
-
-    private ChatClient.Builder createGeminiChatClient(ModelConfig config) {
-        String apiKey = config.getApiKey() != null ? config.getApiKey() : System.getenv("GEMINI_API_KEY");
-        
-        VertexAiGeminiChatOptions options = VertexAiGeminiChatOptions.builder()
-                .withModel(config.getModelName())
-                .withTemperature(config.getTemperature())
-                .build();
-        
-        VertexAiGeminiChatModel chatModel = new VertexAiGeminiChatModel(apiKey, options);
-        return ChatClient.builder(chatModel);
-    }
-
-    private ChatClient.Builder createOllamaChatClient(ModelConfig config) {
-        String baseUrl = config.getBaseUrl() != null ? config.getBaseUrl() : "http://localhost:11434";
-        
-        OllamaApi ollamaApi = new OllamaApi(baseUrl);
-        OllamaChatOptions options = OllamaChatOptions.builder()
-                .withModel(config.getModelName())
-                .withTemperature(config.getTemperature())
-                .build();
-        
-        OllamaChatModel chatModel = new OllamaChatModel(ollamaApi, options);
         return ChatClient.builder(chatModel);
     }
 

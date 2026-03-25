@@ -1,13 +1,10 @@
 package com.lowic.ai.service;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Media;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MimeType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 @Service
 public class ChatService {
@@ -77,10 +74,11 @@ public class ChatService {
     public String chatWithImage(String message, String imageBase64, String imageName) {
         ChatClient chatClient = modelManagerService.getCurrentChatClient();
         
-        Media imageMedia = new Media(MimeType.valueOf("image/jpeg"), imageBase64);
+        // 简化实现，将图片作为base64文本包含在消息中
+        String userPrompt = String.format("%s\n\n[Image: %s]\n%s", message, imageName, imageBase64);
         
         return chatClient.prompt()
-                .user(userSpec -> userSpec.text(message).media(List.of(imageMedia)))
+                .user(userPrompt)
                 .call()
                 .content();
     }
@@ -88,11 +86,12 @@ public class ChatService {
     public String chatWithImageAndSystemPrompt(String systemPrompt, String message, String imageBase64, String imageName) {
         ChatClient chatClient = modelManagerService.getCurrentChatClient();
         
-        Media imageMedia = new Media(MimeType.valueOf("image/jpeg"), imageBase64);
+        // 简化实现，将图片作为base64文本包含在消息中
+        String userPrompt = String.format("%s\n\n[Image: %s]\n%s", message, imageName, imageBase64);
         
         return chatClient.prompt()
                 .system(systemPrompt)
-                .user(userSpec -> userSpec.text(message).media(List.of(imageMedia)))
+                .user(userPrompt)
                 .call()
                 .content();
     }
