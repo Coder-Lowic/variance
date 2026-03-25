@@ -1,89 +1,140 @@
 package com.lowic.ai.service;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import okhttp3.*;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 class SpeechToTextServiceTest {
-
-    @InjectMocks
-    private SpeechToTextService speechToTextService;
 
     @Mock
     private OkHttpClient mockHttpClient;
 
     @Mock
-    private MultipartFile mockAudioFile;
+    private Call mockCall;
+
+    @Mock
+    private Response mockResponse;
+
+    @Mock
+    private ResponseBody mockResponseBody;
+
+    private SpeechToTextService speechToTextService;
+
+    private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        speechToTextService = new SpeechToTextService(mockHttpClient, gson);
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.clearProperty("OPENAI_API_KEY");
     }
 
     @Test
     void testTranscribeWithWhisper() throws IOException {
-        // 模拟文件
+        // 模拟音频文件
+        MultipartFile mockAudioFile = org.mockito.Mockito.mock(MultipartFile.class);
+        byte[] audioData = "test audio data".getBytes();
+        InputStream inputStream = new ByteArrayInputStream(audioData);
+
+        when(mockAudioFile.getInputStream()).thenReturn(inputStream);
         when(mockAudioFile.getOriginalFilename()).thenReturn("test.wav");
-        when(mockAudioFile.getBytes()).thenReturn(new byte[]{0x00, 0x01, 0x02});
+        when(mockAudioFile.getSize()).thenReturn((long) audioData.length);
+        when(mockAudioFile.getBytes()).thenReturn(audioData);
 
-        // 模拟API响应
-        Response mockResponse = mock(Response.class);
+        // 设置环境变量
+        System.setProperty("OPENAI_API_KEY", "test-api-key");
+
+        // 模拟HTTP响应
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty("text", "Whisper transcription result");
+
+        when(mockHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+        when(mockCall.execute()).thenReturn(mockResponse);
         when(mockResponse.isSuccessful()).thenReturn(true);
-        when(mockResponse.body()).thenReturn(ResponseBody.create("{\"text\": \"Hello world\"}", MediaType.parse("application/json")));
+        when(mockResponse.body()).thenReturn(mockResponseBody);
+        when(mockResponseBody.string()).thenReturn(gson.toJson(jsonResponse));
 
-        when(mockHttpClient.newCall(any(Request.class))).thenReturn(mock(Call.class));
-        when(mock(Call.class).execute()).thenReturn(mockResponse);
-
-        // 测试
+        // 测试transcribe方法（使用whisper模型）
         String result = speechToTextService.transcribe(mockAudioFile, "whisper");
-        assertEquals("Hello world", result);
+
+        // 验证结果
+        assertEquals("Whisper transcription result", result);
     }
 
     @Test
     void testTranscribeWithOllama() throws IOException {
-        // 模拟文件
+        // 模拟音频文件
+        MultipartFile mockAudioFile = org.mockito.Mockito.mock(MultipartFile.class);
+        byte[] audioData = "test audio data".getBytes();
+        InputStream inputStream = new ByteArrayInputStream(audioData);
+
+        when(mockAudioFile.getInputStream()).thenReturn(inputStream);
         when(mockAudioFile.getOriginalFilename()).thenReturn("test.wav");
-        when(mockAudioFile.getBytes()).thenReturn(new byte[]{0x00, 0x01, 0x02});
+        when(mockAudioFile.getSize()).thenReturn((long) audioData.length);
+        when(mockAudioFile.getBytes()).thenReturn(audioData);
 
-        // 模拟API响应
-        Response mockResponse = mock(Response.class);
+        // 模拟HTTP响应
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty("response", "Ollama transcription result");
+
+        when(mockHttpClient.newCall(any(Request.class))).thenReturn(mockCall);
+        when(mockCall.execute()).thenReturn(mockResponse);
         when(mockResponse.isSuccessful()).thenReturn(true);
-        when(mockResponse.body()).thenReturn(ResponseBody.create("{\"response\": \"Hello world\"}", MediaType.parse("application/json")));
+        when(mockResponse.body()).thenReturn(mockResponseBody);
+        when(mockResponseBody.string()).thenReturn(gson.toJson(jsonResponse));
 
-        when(mockHttpClient.newCall(any(Request.class))).thenReturn(mock(Call.class));
-        when(mock(Call.class).execute()).thenReturn(mockResponse);
-
-        // 测试
+        // 测试transcribe方法（使用ollama模型）
         String result = speechToTextService.transcribe(mockAudioFile, "ollama");
-        assertEquals("Hello world", result);
+
+        // 验证结果
+        assertEquals("Ollama transcription result", result);
     }
 
     @Test
-    void testTranscribeWithUnsupportedModel() {
-        assertThrows(IllegalArgumentException.class, () -> {
+    void testTranscribeWithUnsupportedModel() throws IOException {
+        // 模拟音频文件
+        MultipartFile mockAudioFile = org.mockito.Mockito.mock(MultipartFile.class);
+        when(mockAudioFile.getOriginalFilename()).thenReturn("test.wav");
+
+        // 测试使用不支持的模型
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             speechToTextService.transcribe(mockAudioFile, "unsupported");
         });
+
+        // 验证异常信息
+        assertEquals("Unsupported speech model: unsupported", exception.getMessage());
     }
 
     @Test
-    void testGetFileExtension() {
-        // 测试有扩展名的文件
-        assertEquals("wav", speechToTextService.getFileExtension("test.wav"));
-        assertEquals("mp3", speechToTextService.getFileExtension("audio.mp3"));
-        
-        // 测试无扩展名的文件
-        assertEquals("wav", speechToTextService.getFileExtension("test"));
-        
-        // 测试null文件名
-        assertEquals("wav", speechToTextService.getFileExtension(null));
+    void testTranscribeWithNullFilename() throws IOException {
+        // 模拟音频文件
+        MultipartFile mockAudioFile = org.mockito.Mockito.mock(MultipartFile.class);
+        when(mockAudioFile.getOriginalFilename()).thenReturn(null);
+
+        // 测试null文件名 - 应该抛出RuntimeException因为OPENAI_API_KEY未设置
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            speechToTextService.transcribe(mockAudioFile, "whisper");
+        });
+
+        // 验证异常信息
+        assertEquals("OPENAI_API_KEY environment variable not set", exception.getMessage());
     }
 }

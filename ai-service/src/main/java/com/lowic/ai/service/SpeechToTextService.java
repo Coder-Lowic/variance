@@ -12,8 +12,19 @@ import java.util.Base64;
 @Service
 public class SpeechToTextService {
 
-    private final OkHttpClient httpClient = new OkHttpClient();
-    private final Gson gson = new Gson();
+    private final OkHttpClient httpClient;
+    private final Gson gson;
+
+    public SpeechToTextService() {
+        this.httpClient = new OkHttpClient();
+        this.gson = new Gson();
+    }
+
+    // 用于测试的构造函数
+    SpeechToTextService(OkHttpClient httpClient, Gson gson) {
+        this.httpClient = httpClient;
+        this.gson = gson;
+    }
 
     public String transcribe(MultipartFile audioFile, String model) throws IOException {
         String extension = getFileExtension(audioFile.getOriginalFilename());
@@ -32,6 +43,9 @@ public class SpeechToTextService {
         // 这里使用 OpenAI Whisper API 作为示例
         // 实际项目中可以替换为本地部署的 Whisper 模型
         String apiKey = System.getenv("OPENAI_API_KEY");
+        if (apiKey == null || apiKey.isEmpty()) {
+            apiKey = System.getProperty("OPENAI_API_KEY");
+        }
         if (apiKey == null || apiKey.isEmpty()) {
             throw new RuntimeException("OPENAI_API_KEY environment variable not set");
         }
