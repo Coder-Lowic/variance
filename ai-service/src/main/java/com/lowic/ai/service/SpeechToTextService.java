@@ -8,15 +8,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SpeechToTextService {
 
     private final OkHttpClient httpClient;
     private final Gson gson;
+    private static final long MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
     public SpeechToTextService() {
-        this.httpClient = new OkHttpClient();
+        this.httpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build();
         this.gson = new Gson();
     }
 
@@ -27,6 +33,11 @@ public class SpeechToTextService {
     }
 
     public String transcribe(MultipartFile audioFile, String model) throws IOException {
+        // 检查文件大小
+        if (audioFile.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("Audio file size exceeds the limit of 25MB");
+        }
+        
         String extension = getFileExtension(audioFile.getOriginalFilename());
         
         switch (model) {
@@ -66,7 +77,7 @@ public class SpeechToTextService {
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response);
+                throw new IOException("Unexpected code " + response + ": " + response.body().string());
             }
             String responseBody = response.body().string();
             JsonObject json = gson.fromJson(responseBody, JsonObject.class);
@@ -94,17 +105,17 @@ public class SpeechToTextService {
         );
 
         Request request = new Request.Builder()
-                .url(baseUrl + "/api/generate")
+                .url(baseUrl + "/api/chat")
                 .post(body)
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response);
+                throw new IOException("Unexpected code " + response + ": " + response.body().string());
             }
             String responseBody = response.body().string();
             JsonObject json = gson.fromJson(responseBody, JsonObject.class);
-            return json.get("response").getAsString();
+            return json.get("message").getAsJsonObject().get("content").getAsString();
         }
     }
 
