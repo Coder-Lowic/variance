@@ -60,19 +60,15 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
         </dependency>
-        <!-- 暂时注释掉Spring AI依赖，因为Spring AI 1.0.0-M5版本的配置方式可能导致测试失败 -->
-        <!-- 
+        <!-- Spring AI依赖 -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
         </dependency>
-        -->
-        <!-- 暂时注释掉pgvector依赖，因为它需要PostgreSQL数据库配置 -->
-        <!-- 
+        <!-- pgvector依赖，用于向量存储 -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
         </dependency>
-        -->
     </dependencies>
 </project>
