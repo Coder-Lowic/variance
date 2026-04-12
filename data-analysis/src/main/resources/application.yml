@@ -5,8 +5,8 @@ spring:
   application:
     name: data-analysis
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/data_analysis?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    driver-class-name: com.oceanbase.jdbc.Driver
+    url: jdbc:oceanbase://localhost:2881/data_analysis
     username: root
     password: root
   servlet:
