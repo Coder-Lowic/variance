@@ -19,11 +19,13 @@ public class ChatService {
     private final ModelManagerService modelManagerService;
     private final SpeechToTextService speechToTextService;
     private final SessionManagerService sessionManagerService;
+    private final MultimodalService multimodalService;
 
-    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService) {
+    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService) {
         this.modelManagerService = modelManagerService;
         this.speechToTextService = speechToTextService;
         this.sessionManagerService = sessionManagerService;
+        this.multimodalService = multimodalService;
     }
 
     public String chat(String message) {
@@ -208,6 +210,63 @@ public class ChatService {
     // 删除会话
     public void deleteSession(String sessionId) {
         sessionManagerService.deleteSession(sessionId);
+    }
+
+    // 基于图片的聊天方法
+    public String chatWithImageFile(MultipartFile imageFile, String prompt) throws IOException {
+        return multimodalService.analyzeImage(imageFile, prompt);
+    }
+
+    // 基于视频的聊天方法
+    public String chatWithVideoFile(MultipartFile videoFile, String prompt) throws IOException {
+        return multimodalService.analyzeVideo(videoFile, prompt);
+    }
+
+    // 基于多模态内容的聊天方法
+    public String chatWithMultimodal(MultipartFile imageFile, MultipartFile videoFile, String prompt) throws IOException {
+        return multimodalService.analyzeMultimodal(imageFile, videoFile, prompt);
+    }
+
+    // 带有系统提示的基于图片的聊天方法
+    public String chatWithImageFileAndSystemPrompt(String systemPrompt, MultipartFile imageFile, String prompt) throws IOException {
+        // 先分析图片内容
+        String imageAnalysis = multimodalService.analyzeImage(imageFile, prompt);
+        
+        // 然后使用系统提示进行进一步处理
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user("图片分析结果：" + imageAnalysis)
+                .call()
+                .content();
+    }
+
+    // 带有系统提示的基于视频的聊天方法
+    public String chatWithVideoFileAndSystemPrompt(String systemPrompt, MultipartFile videoFile, String prompt) throws IOException {
+        // 先分析视频内容
+        String videoAnalysis = multimodalService.analyzeVideo(videoFile, prompt);
+        
+        // 然后使用系统提示进行进一步处理
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user("视频分析结果：" + videoAnalysis)
+                .call()
+                .content();
+    }
+
+    // 带有系统提示的基于多模态内容的聊天方法
+    public String chatWithMultimodalAndSystemPrompt(String systemPrompt, MultipartFile imageFile, MultipartFile videoFile, String prompt) throws IOException {
+        // 先分析多模态内容
+        String multimodalAnalysis = multimodalService.analyzeMultimodal(imageFile, videoFile, prompt);
+        
+        // 然后使用系统提示进行进一步处理
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user("多模态分析结果：" + multimodalAnalysis)
+                .call()
+                .content();
     }
 }
 
