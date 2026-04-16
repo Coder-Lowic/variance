@@ -20,12 +20,14 @@ public class ChatService {
     private final SpeechToTextService speechToTextService;
     private final SessionManagerService sessionManagerService;
     private final MultimodalService multimodalService;
+    private final DocumentGeneratorService documentGeneratorService;
 
-    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService) {
+    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService, DocumentGeneratorService documentGeneratorService) {
         this.modelManagerService = modelManagerService;
         this.speechToTextService = speechToTextService;
         this.sessionManagerService = sessionManagerService;
         this.multimodalService = multimodalService;
+        this.documentGeneratorService = documentGeneratorService;
     }
 
     public String chat(String message) {
@@ -267,6 +269,46 @@ public class ChatService {
                 .user("多模态分析结果：" + multimodalAnalysis)
                 .call()
                 .content();
+    }
+
+    // 生成文档
+    public String generateDocument(String documentType, String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateDocument(documentType, content, parameters);
+    }
+
+    // 生成报告
+    public String generateReport(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateReport(content, parameters);
+    }
+
+    // 生成邮件
+    public String generateEmail(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateEmail(content, parameters);
+    }
+
+    // 生成合同
+    public String generateContract(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateContract(content, parameters);
+    }
+
+    // 生成简历
+    public String generateResume(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateResume(content, parameters);
+    }
+
+    // 生成会议纪要
+    public String generateMeetingMinutes(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateMeetingMinutes(content, parameters);
+    }
+
+    // 生成产品需求文档
+    public String generateProductRequirement(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateProductRequirement(content, parameters);
+    }
+
+    // 生成技术方案文档
+    public String generateTechnicalSolution(String content, java.util.Map<String, Object> parameters) {
+        return documentGeneratorService.generateTechnicalSolution(content, parameters);
     }
 }
 
