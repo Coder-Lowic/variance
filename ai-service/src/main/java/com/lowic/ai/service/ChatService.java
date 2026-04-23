@@ -21,13 +21,15 @@ public class ChatService {
     private final SessionManagerService sessionManagerService;
     private final MultimodalService multimodalService;
     private final DocumentGeneratorService documentGeneratorService;
+    private final RagService ragService;
 
-    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService, DocumentGeneratorService documentGeneratorService) {
+    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService, DocumentGeneratorService documentGeneratorService, RagService ragService) {
         this.modelManagerService = modelManagerService;
         this.speechToTextService = speechToTextService;
         this.sessionManagerService = sessionManagerService;
         this.multimodalService = multimodalService;
         this.documentGeneratorService = documentGeneratorService;
+        this.ragService = ragService;
     }
 
     public String chat(String message) {
@@ -309,6 +311,50 @@ public class ChatService {
     // 生成技术方案文档
     public String generateTechnicalSolution(String content, java.util.Map<String, Object> parameters) {
         return documentGeneratorService.generateTechnicalSolution(content, parameters);
+    }
+
+    // 基于RAG的聊天方法
+    public String chatWithRAG(String message, int k) {
+        return ragService.ragQuery(message, k);
+    }
+
+    // 基于RAG的聊天方法（带系统提示）
+    public String chatWithRAGAndSystemPrompt(String systemPrompt, String message, int k) {
+        return ragService.ragQueryWithSystemPrompt(systemPrompt, message, k);
+    }
+
+    // 基于RAG的会话聊天方法
+    public String chatWithRAGAndSession(String sessionId, String message, int k) {
+        // 添加用户消息到会话
+        com.lowic.ai.entity.ChatSession session = sessionManagerService.getSession(sessionId);
+        if (session == null) {
+            throw new IllegalArgumentException("Session not found");
+        }
+        session.addMessage("user", message);
+
+        // 基于RAG生成回复
+        String response = ragService.ragQueryWithSession(sessionId, message, k);
+
+        // 添加模型回复到会话
+        session.addMessage("assistant", response);
+        sessionManagerService.saveSession(session);
+
+        return response;
+    }
+
+    // 向向量存储中添加文本
+    public int addText(String text, java.util.Map<String, Object> metadata) {
+        return ragService.addText(text, metadata);
+    }
+
+    // 从向量存储中删除文档
+    public boolean deleteDocument(String documentId) {
+        return ragService.deleteDocument(documentId);
+    }
+
+    // 搜索向量存储中的文档
+    public java.util.List<org.springframework.ai.document.Document> searchDocuments(String query, int k) {
+        return ragService.searchDocuments(query, k);
     }
 }
 
