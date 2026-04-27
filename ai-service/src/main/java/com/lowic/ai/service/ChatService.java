@@ -356,5 +356,20 @@ public class ChatService {
     public java.util.List<org.springframework.ai.document.Document> searchDocuments(String query, int k) {
         return ragService.searchDocuments(query, k);
     }
+
+    // 向向量存储中添加图像
+    public int addImage(org.springframework.web.multipart.MultipartFile imageFile, java.util.Map<String, Object> metadata) throws java.io.IOException {
+        return ragService.addImage(imageFile, metadata);
+    }
+
+    // 向向量存储中添加视频
+    public int addVideo(org.springframework.web.multipart.MultipartFile videoFile, java.util.Map<String, Object> metadata) throws java.io.IOException {
+        return ragService.addVideo(videoFile, metadata);
+    }
+
+    // 基于图像的RAG查询
+    public String chatWithRAGAndImage(org.springframework.web.multipart.MultipartFile imageFile, String prompt, int k) throws java.io.IOException {
+        return ragService.ragQueryWithImage(imageFile, prompt, k);
+    }
 }
 
