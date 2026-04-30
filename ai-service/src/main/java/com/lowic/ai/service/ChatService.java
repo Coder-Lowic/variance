@@ -22,14 +22,16 @@ public class ChatService {
     private final MultimodalService multimodalService;
     private final DocumentGeneratorService documentGeneratorService;
     private final RagService ragService;
+    private final PersonalizedRecommendationService personalizedRecommendationService;
 
-    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService, DocumentGeneratorService documentGeneratorService, RagService ragService) {
+    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService, DocumentGeneratorService documentGeneratorService, RagService ragService, PersonalizedRecommendationService personalizedRecommendationService) {
         this.modelManagerService = modelManagerService;
         this.speechToTextService = speechToTextService;
         this.sessionManagerService = sessionManagerService;
         this.multimodalService = multimodalService;
         this.documentGeneratorService = documentGeneratorService;
         this.ragService = ragService;
+        this.personalizedRecommendationService = personalizedRecommendationService;
     }
 
     public String chat(String message) {
@@ -370,6 +372,46 @@ public class ChatService {
     // 基于图像的RAG查询
     public String chatWithRAGAndImage(org.springframework.web.multipart.MultipartFile imageFile, String prompt, int k) throws java.io.IOException {
         return ragService.ragQueryWithImage(imageFile, prompt, k);
+    }
+
+    // 分析用户偏好
+    public java.util.Map<String, Object> analyzeUserPreferences(String userId) {
+        return personalizedRecommendationService.analyzeUserPreferences(userId);
+    }
+
+    // 生成个性化推荐
+    public java.util.List<String> generateRecommendations(String userId, String context, int recommendationCount) {
+        return personalizedRecommendationService.generateRecommendations(userId, context, recommendationCount);
+    }
+
+    // 生成个性化欢迎消息
+    public String generatePersonalizedWelcomeMessage(String userId) {
+        return personalizedRecommendationService.generatePersonalizedWelcomeMessage(userId);
+    }
+
+    // 生成个性化内容建议
+    public java.util.List<String> generateContentSuggestions(String userId, String contentType, int count) {
+        return personalizedRecommendationService.generateContentSuggestions(userId, contentType, count);
+    }
+
+    // 基于RAG的个性化推荐
+    public java.util.List<String> generateRAGBasedRecommendations(String userId, String context, int recommendationCount) {
+        return personalizedRecommendationService.generateRAGBasedRecommendations(userId, context, recommendationCount);
+    }
+
+    // 基于用户偏好的个性化内容生成
+    public String generatePersonalizedContent(String userId, String contentTemplate) {
+        return personalizedRecommendationService.generatePersonalizedContent(userId, contentTemplate);
+    }
+
+    // 个性化文档推荐
+    public java.util.List<org.springframework.ai.document.Document> recommendDocuments(String userId, String query, int count) {
+        return personalizedRecommendationService.recommendDocuments(userId, query, count);
+    }
+
+    // 个性化问答建议
+    public String generatePersonalizedAnswer(String userId, String question) {
+        return personalizedRecommendationService.generatePersonalizedAnswer(userId, question);
     }
 }
 

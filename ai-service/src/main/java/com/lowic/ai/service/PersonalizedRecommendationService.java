@@ -2,6 +2,8 @@ package com.lowic.ai.service;
 
 import com.lowic.ai.entity.ChatSession;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.document.Document;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +16,13 @@ public class PersonalizedRecommendationService {
 
     private final ModelManagerService modelManagerService;
     private final SessionManagerService sessionManagerService;
+    private final RagService ragService;
 
-    public PersonalizedRecommendationService(ModelManagerService modelManagerService, SessionManagerService sessionManagerService) {
+    @Autowired
+    public PersonalizedRecommendationService(ModelManagerService modelManagerService, SessionManagerService sessionManagerService, RagService ragService) {
         this.modelManagerService = modelManagerService;
         this.sessionManagerService = sessionManagerService;
+        this.ragService = ragService;
     }
 
     /**
@@ -184,5 +189,161 @@ public class PersonalizedRecommendationService {
         return suggestions.lines()
                 .filter(line -> !line.trim().isEmpty())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 基于RAG的个性化推荐
+     * @param userId 用户ID
+     * @param context 当前上下文
+     * @param recommendationCount 推荐数量
+     * @return 个性化推荐列表
+     */
+    public List<String> generateRAGBasedRecommendations(String userId, String context, int recommendationCount) {
+        // 分析用户偏好
+        Map<String, Object> userPreferences = analyzeUserPreferences(userId);
+        String analysisResult = (String) userPreferences.get("analysis");
+
+        // 从向量存储中检索与用户兴趣相关的文档
+        List<Document> relevantDocuments = ragService.searchDocuments(analysisResult, 5);
+
+        // 构建上下文
+        StringBuilder ragContext = new StringBuilder();
+        for (Document doc : relevantDocuments) {
+            ragContext.append("Document: " + doc.getId() + "\n");
+            ragContext.append("Content: " + doc.getContent() + "\n\n");
+        }
+
+        // 使用大模型生成推荐
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
+        String prompt = String.format("""
+                基于以下用户偏好分析、当前上下文和相关文档，生成%d个个性化推荐：
+                
+                用户偏好分析：
+                %s
+                
+                当前上下文：
+                %s
+                
+                相关文档：
+                %s
+                
+                推荐应包括：
+                1. 与用户兴趣相关的内容
+                2. 可能对用户有帮助的服务
+                3. 基于用户历史行为的个性化建议
+                4. 与当前上下文相关的推荐
+                5. 结合相关文档中的信息
+                
+                请以列表形式输出推荐，每个推荐项一行。
+                """, recommendationCount, analysisResult, context, ragContext.toString());
+
+        String recommendations = chatClient.prompt()
+                .system("你是一个专业的推荐系统助手，能够基于用户偏好、当前上下文和相关文档生成个性化推荐。")
+                .user(prompt)
+                .call()
+                .content();
+
+        // 解析推荐结果
+        return recommendations.lines()
+                .filter(line -> !line.trim().isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 基于用户偏好的个性化内容生成
+     * @param userId 用户ID
+     * @param contentTemplate 内容模板
+     * @return 个性化内容
+     */
+    public String generatePersonalizedContent(String userId, String contentTemplate) {
+        // 分析用户偏好
+        Map<String, Object> userPreferences = analyzeUserPreferences(userId);
+        String analysisResult = (String) userPreferences.get("analysis");
+
+        // 使用大模型生成个性化内容
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
+        String prompt = String.format("""
+                基于以下用户偏好分析，按照提供的模板生成个性化内容：
+                
+                用户偏好分析：
+                %s
+                
+                内容模板：
+                %s
+                
+                请根据用户偏好分析结果，填充模板中的占位符，生成符合用户风格和兴趣的个性化内容。
+                """, analysisResult, contentTemplate);
+
+        return chatClient.prompt()
+                .system("你是一个专业的内容生成助手，能够基于用户偏好生成个性化内容。")
+                .user(prompt)
+                .call()
+                .content();
+    }
+
+    /**
+     * 个性化文档推荐
+     * @param userId 用户ID
+     * @param query 查询关键词
+     * @param count 推荐数量
+     * @return 推荐的文档列表
+     */
+    public List<Document> recommendDocuments(String userId, String query, int count) {
+        // 分析用户偏好
+        Map<String, Object> userPreferences = analyzeUserPreferences(userId);
+        String analysisResult = (String) userPreferences.get("analysis");
+
+        // 结合用户偏好和查询关键词进行检索
+        String combinedQuery = analysisResult + " " + query;
+        return ragService.searchDocuments(combinedQuery, count);
+    }
+
+    /**
+     * 个性化问答建议
+     * @param userId 用户ID
+     * @param question 用户问题
+     * @return 个性化回答建议
+     */
+    public String generatePersonalizedAnswer(String userId, String question) {
+        // 分析用户偏好
+        Map<String, Object> userPreferences = analyzeUserPreferences(userId);
+        String analysisResult = (String) userPreferences.get("analysis");
+
+        // 使用RAG检索相关文档
+        List<Document> relevantDocuments = ragService.searchDocuments(question, 3);
+
+        // 构建上下文
+        StringBuilder context = new StringBuilder();
+        for (Document doc : relevantDocuments) {
+            context.append("Document: " + doc.getId() + "\n");
+            context.append("Content: " + doc.getContent() + "\n\n");
+        }
+
+        // 使用大模型生成个性化回答
+        ChatClient chatClient = modelManagerService.getCurrentChatClient();
+        String prompt = String.format("""
+                基于以下用户偏好分析、相关文档和用户问题，生成个性化回答：
+                
+                用户偏好分析：
+                %s
+                
+                相关文档：
+                %s
+                
+                用户问题：
+                %s
+                
+                回答应：
+                1. 符合用户的语言风格和沟通偏好
+                2. 结合相关文档中的信息
+                3. 针对用户的兴趣和需求进行个性化调整
+                4. 提供详细且有帮助的回答
+                """, analysisResult, context.toString(), question);
+
+        return chatClient.prompt()
+                .system("你是一个专业的问答助手，能够基于用户偏好和相关文档生成个性化回答。")
+                .user(prompt)
+                .call()
+                .content();
     }
 }
