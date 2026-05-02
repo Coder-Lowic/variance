@@ -32,9 +32,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * @author Lowic
- */
 @RestController
 @RequestMapping("analysis")
 public class AnalysisController {
@@ -45,287 +42,64 @@ public class AnalysisController {
     @Resource
     private SqlSessionTemplate sqlSessionTemplate;
 
+    private static final int BATCH_COUNT = 5000;
+
     @RequestMapping("uploadExcelForSdAdRp")
     public String uploadExcelForSdAdRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
-        batchInsertBySqlSession(multipartFile);
-
-        return "上传成功";
-    }
-
-    private void batchInsertBySqlSession(MultipartFile multipartFile) {
-        LocalDateTime startTime = LocalDateTime.now();
-        try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<SdAdRp> sdAdRpList = excelReader.read(0, 1, SdAdRp.class);
-
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            SdAdRpMapper mapper = sqlSession.getMapper(SdAdRpMapper.class);
-            // 每批次导入的最大数据
-            int batchCount = 5000;
-            // 每批最后一条数据下标等于批量大小
-            int batchLastIndex = batchCount;
-            // 批量插入   index 为 下标
-            for (int index = 0; index < sdAdRpList.size(); ) {
-                // 如果读取的数量大小 小于 批量大小
-                if (sdAdRpList.size() < batchLastIndex) {
-                    batchLastIndex = sdAdRpList.size();
-                    mapper.batchInsert(sdAdRpList.subList(index, batchLastIndex));
-                    // 清除缓存
-                    sqlSession.clearCache();
-                    break;
-                } else {
-                    mapper.batchInsert(sdAdRpList.subList(index, batchLastIndex));
-                    // 清除缓存 防止溢出
-                    sqlSession.clearCache();
-                    index = batchLastIndex;
-                    batchLastIndex = index + (batchCount - 1);
-                }
-            }
-            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
-            sqlSession.commit();
-            // 关闭
-            sqlSession.close();
-
-            LocalDateTime endTime = LocalDateTime.now();
-            ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(SdAdRp.class.getAnnotation(TableName.class).value()).importCounts(sdAdRpList.size())
-                    .costTime(Duration.between(startTime, endTime).toSeconds())
-                    .createTime(LocalDateTime.now()).createId(1004).build();
-            iImportOperateRecordService.save(importOperateRecord);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return batchInsert(multipartFile, SdAdRp.class, SdAdRpMapper.class, 0, 1);
     }
 
     @RequestMapping("uploadExcelForSpAdRp")
     public String uploadExcelForSpAdRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
-        LocalDateTime startTime = LocalDateTime.now();
-        try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<SpAdRp> spAdRpList = excelReader.read(0, 1, SpAdRp.class);
-
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            SpAdRpMapper mapper = sqlSession.getMapper(SpAdRpMapper.class);
-            // 每批次导入的最大数据
-            int batchCount = 5000;
-            // 每批最后一条数据下标等于批量大小
-            int batchLastIndex = batchCount;
-            // 批量插入   index 为 下标
-            for (int index = 0; index < spAdRpList.size(); ) {
-                // 如果读取的数量大小 小于 批量大小
-                if (spAdRpList.size() < batchLastIndex) {
-                    batchLastIndex = spAdRpList.size();
-                    mapper.batchInsert(spAdRpList.subList(index, batchLastIndex));
-                    // 清除缓存
-                    sqlSession.clearCache();
-                    break;
-                } else {
-                    mapper.batchInsert(spAdRpList.subList(index, batchLastIndex));
-                    // 清除缓存 防止溢出
-                    sqlSession.clearCache();
-                    index = batchLastIndex;
-                    batchLastIndex = index + (batchCount - 1);
-                }
-            }
-            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
-            sqlSession.commit();
-            // 关闭
-            sqlSession.close();
-
-            LocalDateTime endTime = LocalDateTime.now();
-            ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(SpAdRp.class.getAnnotation(TableName.class).value()).importCounts(spAdRpList.size())
-                    .costTime(Duration.between(startTime, endTime).toSeconds())
-                    .createTime(LocalDateTime.now()).createId(1004).build();
-            iImportOperateRecordService.save(importOperateRecord);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return "上传成功";
+        return batchInsert(multipartFile, SpAdRp.class, SpAdRpMapper.class, 0, 1);
     }
 
     @RequestMapping("uploadExcelForSbCampRp")
     public String uploadExcelForSbCampRp(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
-        LocalDateTime startTime = LocalDateTime.now();
-        try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<SbCampRp> sbCampRpList = excelReader.read(0, 1, SbCampRp.class);
-
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            SbCampRpMapper mapper = sqlSession.getMapper(SbCampRpMapper.class);
-            // 每批次导入的最大数据
-            int batchCount = 5000;
-            // 每批最后一条数据下标等于批量大小
-            int batchLastIndex = batchCount;
-            // 批量插入   index 为 下标
-            for (int index = 0; index < sbCampRpList.size(); ) {
-                // 如果读取的数量大小 小于 批量大小
-                if (sbCampRpList.size() < batchLastIndex) {
-                    batchLastIndex = sbCampRpList.size();
-                    mapper.batchInsert(sbCampRpList.subList(index, batchLastIndex));
-                    // 清除缓存
-                    sqlSession.clearCache();
-                    break;
-                } else {
-                    mapper.batchInsert(sbCampRpList.subList(index, batchLastIndex));
-                    // 清除缓存 防止溢出
-                    sqlSession.clearCache();
-                    index = batchLastIndex;
-                    batchLastIndex = index + (batchCount - 1);
-                }
-            }
-            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
-            sqlSession.commit();
-            // 关闭
-            sqlSession.close();
-
-            LocalDateTime endTime = LocalDateTime.now();
-            ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(SbCampRp.class.getAnnotation(TableName.class).value()).importCounts(sbCampRpList.size())
-                    .costTime(Duration.between(startTime, endTime).toSeconds())
-                    .createTime(LocalDateTime.now()).createId(1004).build();
-            iImportOperateRecordService.save(importOperateRecord);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return "上传成功";
+        return batchInsert(multipartFile, SbCampRp.class, SbCampRpMapper.class, 0, 1);
     }
 
     @RequestMapping("uploadExcelForBusinessReport")
     public String uploadExcelForBusinessReport(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
-        LocalDateTime startTime = LocalDateTime.now();
-        try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<BusinessReport> businessReportList = excelReader.read(0, 1, BusinessReport.class);
-
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            BusinessReportMapper mapper = sqlSession.getMapper(BusinessReportMapper.class);
-            // 每批次导入的最大数据
-            int batchCount = 5000;
-            // 每批最后一条数据下标等于批量大小
-            int batchLastIndex = batchCount;
-            // 批量插入   index 为 下标
-            for (int index = 0; index < businessReportList.size(); ) {
-                // 如果读取的数量大小 小于 批量大小
-                if (businessReportList.size() < batchLastIndex) {
-                    batchLastIndex = businessReportList.size();
-                    mapper.batchInsert(businessReportList.subList(index, batchLastIndex));
-                    // 清除缓存
-                    sqlSession.clearCache();
-                    break;
-                } else {
-                    mapper.batchInsert(businessReportList.subList(index, batchLastIndex));
-                    // 清除缓存 防止溢出
-                    sqlSession.clearCache();
-                    index = batchLastIndex;
-                    batchLastIndex = index + (batchCount - 1);
-                }
-            }
-            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
-            sqlSession.commit();
-            // 关闭
-            sqlSession.close();
-
-            LocalDateTime endTime = LocalDateTime.now();
-            ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(BusinessReport.class.getAnnotation(TableName.class).value()).importCounts(businessReportList.size())
-                    .costTime(Duration.between(startTime, endTime).toSeconds())
-                    .createTime(LocalDateTime.now()).createId(1004).build();
-            iImportOperateRecordService.save(importOperateRecord);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return "上传成功";
+        return batchInsert(multipartFile, BusinessReport.class, BusinessReportMapper.class, 0, 1);
     }
 
     @RequestMapping("uploadExcelForSbInfo")
     public String uploadExcelForSbInfo(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
-        LocalDateTime startTime = LocalDateTime.now();
-        try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<SbInfo> sbInfoList = excelReader.read(0, 1, SbInfo.class);
-
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            SbInfoMapper mapper = sqlSession.getMapper(SbInfoMapper.class);
-            // 每批次导入的最大数据
-            int batchCount = 5000;
-            // 每批最后一条数据下标等于批量大小
-            int batchLastIndex = batchCount;
-            // 批量插入   index 为 下标
-            for (int index = 0; index < sbInfoList.size(); ) {
-                // 如果读取的数量大小 小于 批量大小
-                if (sbInfoList.size() < batchLastIndex) {
-                    batchLastIndex = sbInfoList.size();
-                    mapper.batchInsert(sbInfoList.subList(index, batchLastIndex));
-                    // 清除缓存
-                    sqlSession.clearCache();
-                    break;
-                } else {
-                    mapper.batchInsert(sbInfoList.subList(index, batchLastIndex));
-                    // 清除缓存 防止溢出
-                    sqlSession.clearCache();
-                    index = batchLastIndex;
-                    batchLastIndex = index + (batchCount - 1);
-                }
-            }
-            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
-            sqlSession.commit();
-            // 关闭
-            sqlSession.close();
-
-            LocalDateTime endTime = LocalDateTime.now();
-            ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(SbInfo.class.getAnnotation(TableName.class).value()).importCounts(sbInfoList.size())
-                    .costTime(Duration.between(startTime, endTime).toSeconds())
-                    .createTime(LocalDateTime.now()).createId(1004).build();
-            iImportOperateRecordService.save(importOperateRecord);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return "上传成功";
+        return batchInsert(multipartFile, SbInfo.class, SbInfoMapper.class, 0, 1);
     }
 
     @RequestMapping("uploadExcelForProductionInfo")
     public String uploadExcelForProductionInfo(@RequestParam(value = "file") MultipartFile multipartFile, String name) {
+        return batchInsert(multipartFile, ProductInfo.class, ProductInfoMapper.class, 1, 2);
+    }
+
+    private <T> String batchInsert(MultipartFile multipartFile, Class<T> entityClass, Class<?> mapperClass, int headerRowIndex, int dataStartRowIndex) {
         LocalDateTime startTime = LocalDateTime.now();
         try (ExcelReader excelReader = ExcelUtil.getReader(multipartFile.getInputStream())) {
-            List<ProductInfo> productInfoList = excelReader.read(1, 2, ProductInfo.class);
+            List<T> dataList = excelReader.read(headerRowIndex, dataStartRowIndex, entityClass);
 
-            SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false);
-            ProductInfoMapper mapper = sqlSession.getMapper(ProductInfoMapper.class);
-            // 每批次导入的最大数据
-            int batchCount = 5000;
-            // 每批最后一条数据下标等于批量大小
-            int batchLastIndex = batchCount;
-            // 批量插入   index 为 下标
-            for (int index = 0; index < productInfoList.size(); ) {
-                // 如果读取的数量大小 小于 批量大小
-                if (productInfoList.size() < batchLastIndex) {
-                    batchLastIndex = productInfoList.size();
-                    mapper.batchInsert(productInfoList.subList(index, batchLastIndex));
-                    // 清除缓存
-                    sqlSession.clearCache();
-                    break;
-                } else {
-                    mapper.batchInsert(productInfoList.subList(index, batchLastIndex));
-                    // 清除缓存 防止溢出
-                    sqlSession.clearCache();
-                    index = batchLastIndex;
-                    batchLastIndex = index + (batchCount - 1);
+            try (SqlSession sqlSession = sqlSessionTemplate.getSqlSessionFactory().openSession(ExecutorType.BATCH, false)) {
+                Object mapper = sqlSession.getMapper(mapperClass);
+                int batchLastIndex = BATCH_COUNT;
+
+                for (int index = 0; index < dataList.size(); ) {
+                    if (dataList.size() < batchLastIndex) {
+                        batchLastIndex = dataList.size();
+                        invokeBatchInsert(mapper, dataList.subList(index, batchLastIndex));
+                        break;
+                    } else {
+                        invokeBatchInsert(mapper, dataList.subList(index, batchLastIndex));
+                        index = batchLastIndex;
+                        batchLastIndex = index + (BATCH_COUNT - 1);
+                    }
                 }
+                sqlSession.commit();
             }
-            // 将数据提交到数据库，否则的话只是执行，但是并没有提交数据到数据库
-            sqlSession.commit();
-            // 关闭
-            sqlSession.close();
 
             LocalDateTime endTime = LocalDateTime.now();
             ImportOperateRecord importOperateRecord = ImportOperateRecord.builder()
-                    .targetTable(ProductInfo.class.getAnnotation(TableName.class).value()).importCounts(productInfoList.size())
+                    .targetTable(entityClass.getAnnotation(TableName.class).value()).importCounts(dataList.size())
                     .costTime(Duration.between(startTime, endTime).toSeconds())
                     .createTime(LocalDateTime.now()).createId(1004).build();
             iImportOperateRecordService.save(importOperateRecord);
@@ -333,8 +107,15 @@ public class AnalysisController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
         return "上传成功";
+    }
+
+    private void invokeBatchInsert(Object mapper, List<?> subList) {
+        try {
+            mapper.getClass().getMethod("batchInsert", List.class).invoke(mapper, subList);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

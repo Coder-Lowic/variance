@@ -3,16 +3,16 @@ package com.lowic.ai.service;
 import com.lowic.ai.entity.ChatSession;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
 public class SessionManagerService {
-    private final Map<String, ChatSession> sessions = new HashMap<>();
-    private final Map<String, Map<String, Object>> userPreferences = new HashMap<>();
+    private final Map<String, ChatSession> sessions = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Object>> userPreferences = new ConcurrentHashMap<>();
 
     public ChatSession createSession(String userId) {
         String sessionId = UUID.randomUUID().toString();

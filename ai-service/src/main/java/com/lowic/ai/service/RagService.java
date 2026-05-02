@@ -123,9 +123,8 @@ public class RagService {
      * @param documentId 文档ID
      * @return 是否删除成功
      */
-    public boolean deleteDocument(String documentId) {
+    public void deleteDocument(String documentId) {
         vectorStore.delete(List.of(documentId));
-        return true;
     }
 
     /**
