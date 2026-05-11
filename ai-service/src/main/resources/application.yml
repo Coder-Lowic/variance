@@ -40,6 +40,21 @@ spring:
         password: postgres
         initialize-schema: true
 
+moderation:
+  enabled: true
+  categories:
+    - violence
+    - hate
+    - sexual
+    - harassment
+    - self_harm
+    - illegal
+    - sensitive_info
+    - misinformation
+    - spam
+  defaultRiskThreshold: medium
+  autoFilter: true
+
 server:
   port: 8081
 
