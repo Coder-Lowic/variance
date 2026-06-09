@@ -49,7 +49,7 @@ public class MultimodalController {
     public ResponseEntity<String> multimodalQA(
             @RequestParam("file") MultipartFile file,
             @RequestParam("question") String question) throws IOException {
-        String answer = multimodalService.analyzeMultimodal(file, question);
+        String answer = multimodalService.analyzeMultimodal(file, null, question);
         return ResponseEntity.ok(answer);
     }
 }

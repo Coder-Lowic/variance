@@ -413,5 +413,36 @@ public class ChatService {
     public String generatePersonalizedAnswer(String userId, String question) {
         return personalizedRecommendationService.generatePersonalizedAnswer(userId, question);
     }
+
+    // 切换模型
+    public void switchModel(String provider, String model) {
+        com.lowic.ai.model.ModelConfig config = new com.lowic.ai.model.ModelConfig();
+        config.setProvider(com.lowic.ai.model.ModelProvider.valueOf(provider.toUpperCase()));
+        config.setModelName(model);
+        config.setTemperature(0.7);
+        config.setMaxTokens(2048);
+        modelManagerService.switchModel(config);
+    }
+
+    // 获取可用模型列表
+    public java.util.List<java.util.Map<String, String>> getAvailableModels() {
+        java.util.List<java.util.Map<String, String>> models = new java.util.ArrayList<>();
+        var modelMap = modelManagerService.getAvailableModels();
+        for (var entry : modelMap.entrySet()) {
+            java.util.Map<String, String> item = new java.util.HashMap<>();
+            item.put("provider", entry.getKey().name());
+            item.put("models", entry.getValue());
+            models.add(item);
+        }
+        return models;
+    }
+
+    // 获取当前模型
+    public java.util.Map<String, String> getCurrentModel() {
+        java.util.Map<String, String> result = new java.util.HashMap<>();
+        result.put("provider", modelManagerService.getCurrentModelConfig().getProvider().name());
+        result.put("model", modelManagerService.getCurrentModelConfig().getModelName());
+        return result;
+    }
 }
 

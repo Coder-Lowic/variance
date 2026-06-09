@@ -35,7 +35,7 @@ public class DocumentController {
     @PostMapping("/report")
     public ResponseEntity<String> generateReport(@RequestBody Map<String, Object> request) {
         String content = (String) request.get("content");
-        String report = documentGeneratorService.generateReport(content);
+        String report = documentGeneratorService.generateReport(content, null);
         return ResponseEntity.ok(report);
     }
 
@@ -43,7 +43,7 @@ public class DocumentController {
     @PostMapping("/email")
     public ResponseEntity<String> generateEmail(@RequestBody Map<String, Object> request) {
         String content = (String) request.get("content");
-        String email = documentGeneratorService.generateEmail(content);
+        String email = documentGeneratorService.generateEmail(content, null);
         return ResponseEntity.ok(email);
     }
 
@@ -51,7 +51,7 @@ public class DocumentController {
     @PostMapping("/contract")
     public ResponseEntity<String> generateContract(@RequestBody Map<String, Object> request) {
         String content = (String) request.get("content");
-        String contract = documentGeneratorService.generateContract(content);
+        String contract = documentGeneratorService.generateContract(content, null);
         return ResponseEntity.ok(contract);
     }
 
@@ -59,14 +59,7 @@ public class DocumentController {
     @PostMapping("/resume")
     public ResponseEntity<String> generateResume(@RequestBody Map<String, Object> request) {
         String content = (String) request.get("content");
-        String resume = documentGeneratorService.generateResume(content);
+        String resume = documentGeneratorService.generateResume(content, null);
         return ResponseEntity.ok(resume);
-    }
-
-    @Operation(summary = "获取支持的文档类型", description = "获取系统支持的所有文档类型")
-    @GetMapping("/types")
-    public ResponseEntity<List<String>> getSupportedDocumentTypes() {
-        List<String> types = documentGeneratorService.getSupportedDocumentTypes();
-        return ResponseEntity.ok(types);
     }
 }

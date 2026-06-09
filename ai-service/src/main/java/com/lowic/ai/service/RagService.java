@@ -121,10 +121,10 @@ public class RagService {
     /**
      * 从向量存储中删除文档
      * @param documentId 文档ID
-     * @return 是否删除成功
      */
-    public void deleteDocument(String documentId) {
+    public boolean deleteDocument(String documentId) {
         vectorStore.delete(List.of(documentId));
+        return true;
     }
 
     /**
@@ -323,5 +323,26 @@ public class RagService {
             relevantDocuments = relevantDocuments.subList(0, k);
         }
         return relevantDocuments;
+    }
+
+    /**
+     * 获取向量存储中的文档总数
+     * @return 文档总数（估算值）
+     */
+    public long getDocumentCount() {
+        return vectorStore.similaritySearch("*").size();
+    }
+
+    /**
+     * 清空向量存储中的所有文档
+     */
+    public void clearDocuments() {
+        List<Document> allDocs = vectorStore.similaritySearch("*");
+        List<String> ids = allDocs.stream()
+                .map(Document::getId)
+                .toList();
+        if (!ids.isEmpty()) {
+            vectorStore.delete(ids);
+        }
     }
 }

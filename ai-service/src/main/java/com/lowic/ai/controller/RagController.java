@@ -66,7 +66,8 @@ public class RagController {
     @PostMapping("/document")
     public ResponseEntity<Map<String, Object>> addDocument(
             @RequestParam("file") MultipartFile file) throws IOException {
-        int count = ragService.addDocument(file);
+        String content = new String(file.getBytes());
+        int count = ragService.addText(content, Map.of("fileName", file.getOriginalFilename()));
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "count", count
@@ -94,9 +95,9 @@ public class RagController {
     @Operation(summary = "删除文档", description = "从向量存储中删除文档")
     @DeleteMapping("/document/{id}")
     public ResponseEntity<Map<String, Object>> deleteDocument(@PathVariable String id) {
-        boolean success = ragService.deleteDocument(id);
+        ragService.deleteDocument(id);
         return ResponseEntity.ok(Map.of(
-                "success", success
+                "success", true
         ));
     }
 

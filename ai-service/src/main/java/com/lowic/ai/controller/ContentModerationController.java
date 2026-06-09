@@ -103,7 +103,7 @@ public class ContentModerationController {
             if (contentId == null) {
                 contentId = UUID.randomUUID().toString();
             }
-            ContentModerationResult result = contentModerationService.comprehensiveModerate(
+            ContentModerationResult result = contentModerationService.comprehensiveModeration(
                     content, contentId, checkSensitiveInfo, checkAI, checkImage, imageFile);
             return ResponseEntity.ok(result);
         } catch (Exception e) {

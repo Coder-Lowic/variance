@@ -25,8 +25,7 @@ public class SessionController {
     @PostMapping
     public ResponseEntity<ChatSession> createSession(@RequestBody Map<String, String> request) {
         String userId = request.get("userId");
-        String sessionName = request.get("sessionName");
-        ChatSession session = sessionManagerService.createSession(userId, sessionName);
+        ChatSession session = sessionManagerService.createSession(userId);
         return ResponseEntity.ok(session);
     }
 
@@ -48,35 +47,12 @@ public class SessionController {
         }
     }
 
-    @Operation(summary = "更新会话", description = "更新会话信息")
-    @PutMapping("/{sessionId}")
-    public ResponseEntity<ChatSession> updateSession(
-            @PathVariable String sessionId,
-            @RequestBody Map<String, String> request) {
-        String sessionName = request.get("sessionName");
-        ChatSession session = sessionManagerService.updateSession(sessionId, sessionName);
-        if (session != null) {
-            return ResponseEntity.ok(session);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
     @Operation(summary = "删除会话", description = "删除指定会话")
     @DeleteMapping("/{sessionId}")
     public ResponseEntity<Map<String, Object>> deleteSession(@PathVariable String sessionId) {
-        boolean success = sessionManagerService.deleteSession(sessionId);
+        sessionManagerService.deleteSession(sessionId);
         return ResponseEntity.ok(Map.of(
-                "success", success
-        ));
-    }
-
-    @Operation(summary = "清空会话消息", description = "清空指定会话的所有消息")
-    @DeleteMapping("/{sessionId}/messages")
-    public ResponseEntity<Map<String, Object>> clearSessionMessages(@PathVariable String sessionId) {
-        boolean success = sessionManagerService.clearSessionMessages(sessionId);
-        return ResponseEntity.ok(Map.of(
-                "success", success
+                "success", true
         ));
     }
 

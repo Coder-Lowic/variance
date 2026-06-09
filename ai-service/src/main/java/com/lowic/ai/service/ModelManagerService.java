@@ -69,4 +69,8 @@ public class ModelManagerService {
         models.put(ModelProvider.OLLAMA, "llama3, mistral, codellama");
         return models;
     }
+
+    public ModelConfig getCurrentModelConfig() {
+        return currentConfig;
+    }
 }
