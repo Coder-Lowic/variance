@@ -7,6 +7,19 @@ spring:
       max-file-size: 50MB
       max-request-size: 50MB
       file-size-threshold: 2KB
+  datasource:
+    url: jdbc:postgresql://localhost:5432/vector_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
   ai:
     openai:
       api-key: ${OPENAI_API_KEY:}

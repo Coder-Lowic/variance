@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: variance-web
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: AI Service
+        url: http://localhost:8081/api-docs
+      - name: Data Analysis
+        url: http://localhost:8888/api-docs

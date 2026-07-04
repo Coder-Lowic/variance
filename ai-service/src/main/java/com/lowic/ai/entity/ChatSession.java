@@ -1,15 +1,34 @@
 package com.lowic.ai.entity;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+@Entity
+@Table(name = "chat_session")
 public class ChatSession {
+
+    @Id
+    @Column(length = 64)
     private String sessionId;
+
+    @Column(nullable = false, length = 64)
     private String userId;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
-    private List<ChatMessage> messages;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("timestamp ASC")
+    private List<ChatMessage> messages = new ArrayList<>();
+
+    public ChatSession() {
+    }
 
     public ChatSession(String sessionId, String userId) {
         this.sessionId = sessionId;
@@ -17,6 +36,13 @@ public class ChatSession {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.messages = new ArrayList<>();
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (this.sessionId == null) {
+            this.sessionId = UUID.randomUUID().toString();
+        }
     }
 
     public String getSessionId() {
@@ -60,12 +86,15 @@ public class ChatSession {
     }
 
     public void addMessage(ChatMessage message) {
+        message.setSession(this);
         this.messages.add(message);
         this.updatedAt = LocalDateTime.now();
     }
 
     public void addMessage(String role, String content) {
-        this.messages.add(new ChatMessage(role, content, LocalDateTime.now()));
+        ChatMessage msg = new ChatMessage(role, content, LocalDateTime.now());
+        msg.setSession(this);
+        this.messages.add(msg);
         this.updatedAt = LocalDateTime.now();
     }
 }

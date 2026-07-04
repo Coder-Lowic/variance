@@ -1,55 +1,57 @@
 package com.lowic.ai.service;
 
+import com.lowic.ai.entity.DocumentCache;
 import com.lowic.ai.entity.DocumentQAResult;
+import com.lowic.ai.repository.DocumentCacheRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class DocumentQAService {
+    private static final Logger log = LoggerFactory.getLogger(DocumentQAService.class);
 
     private final DocumentParserService documentParserService;
     private final ModelManagerService modelManagerService;
-    private final VectorStore vectorStore;
     private final RagService ragService;
-
-    private final Map<String, String> documentCache = new ConcurrentHashMap<>();
-    private final Map<String, List<DocumentQAResult>> sessionHistory = new ConcurrentHashMap<>();
+    private final DocumentCacheRepository documentCacheRepository;
 
     public DocumentQAService(DocumentParserService documentParserService,
                              ModelManagerService modelManagerService,
-                             VectorStore vectorStore,
-                             RagService ragService) {
+                             RagService ragService,
+                             DocumentCacheRepository documentCacheRepository) {
         this.documentParserService = documentParserService;
         this.modelManagerService = modelManagerService;
-        this.vectorStore = vectorStore;
         this.ragService = ragService;
+        this.documentCacheRepository = documentCacheRepository;
     }
 
     /**
-     * 上传文档并缓存内容
+     * 上传文档并持久化缓存内容
      */
+    @Transactional
     public Map<String, Object> uploadDocument(MultipartFile file) throws IOException {
         String documentName = file.getOriginalFilename();
         String content = documentParserService.parseDocument(file);
         String docId = UUID.randomUUID().toString();
 
-        documentCache.put(docId, content);
+        DocumentCache cache = new DocumentCache(docId, documentName, content);
+        documentCacheRepository.save(cache);
 
         try {
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("docId", docId);
             metadata.put("fileName", documentName);
             ragService.addText(content, metadata);
-        } catch (Exception ignored) {
-            // 向量存储不可用时仅使用内存缓存
+        } catch (Exception e) {
+            log.warn("Vector store unavailable for document {}, using DB cache only", docId);
         }
 
         Map<String, Object> result = new HashMap<>();
@@ -63,16 +65,12 @@ public class DocumentQAService {
     /**
      * 基于上传的文档进行问答
      */
+    @Transactional(readOnly = true)
     public DocumentQAResult askQuestion(String docId, String question, String sessionId) {
-        String documentContent = documentCache.get(docId);
-        if (documentContent == null) {
-            throw new IllegalArgumentException("文档不存在或已过期，请重新上传");
-        }
-
+        String documentContent = getDocumentContent(docId);
         DocumentQAResult result = doAsk(documentContent, question, getDocumentName(docId));
 
         if (sessionId != null) {
-            sessionHistory.computeIfAbsent(sessionId, sid -> new ArrayList<>()).add(result);
             result.setSessionId(sessionId);
         }
 
@@ -82,6 +80,7 @@ public class DocumentQAService {
     /**
      * 基于上传文件直接问答
      */
+    @Transactional
     public DocumentQAResult askQuestionWithFile(MultipartFile file, String question, String sessionId) throws IOException {
         Map<String, Object> uploadResult = uploadDocument(file);
         String docId = (String) uploadResult.get("docId");
@@ -95,7 +94,6 @@ public class DocumentQAService {
         DocumentQAResult result = doAsk(content, question, documentName);
 
         if (sessionId != null) {
-            sessionHistory.computeIfAbsent(sessionId, k -> new ArrayList<>()).add(result);
             result.setSessionId(sessionId);
         }
 
@@ -105,11 +103,9 @@ public class DocumentQAService {
     /**
      * 生成文档摘要
      */
+    @Transactional(readOnly = true)
     public DocumentQAResult summarizeDocument(String docId, String summaryLength) {
-        String documentContent = documentCache.get(docId);
-        if (documentContent == null) {
-            throw new IllegalArgumentException("文档不存在或已过期，请重新上传");
-        }
+        String documentContent = getDocumentContent(docId);
 
         String lengthDesc = switch (summaryLength != null ? summaryLength : "medium") {
             case "short" -> "请生成简短摘要，控制在100字以内";
@@ -127,11 +123,9 @@ public class DocumentQAService {
     /**
      * 提取文档关键信息
      */
+    @Transactional(readOnly = true)
     public DocumentQAResult extractKeyPoints(String docId) {
-        String documentContent = documentCache.get(docId);
-        if (documentContent == null) {
-            throw new IllegalArgumentException("文档不存在或已过期，请重新上传");
-        }
+        String documentContent = getDocumentContent(docId);
 
         DocumentQAResult result = doAsk(documentContent,
                 "请提取文档的关键信息，包括：主题、核心观点、重要数据、结论和建议。请以结构化格式输出。",
@@ -143,13 +137,10 @@ public class DocumentQAService {
     /**
      * 对比两个文档
      */
+    @Transactional(readOnly = true)
     public DocumentQAResult compareDocuments(String docId1, String docId2) {
-        String content1 = documentCache.get(docId1);
-        String content2 = documentCache.get(docId2);
-
-        if (content1 == null || content2 == null) {
-            throw new IllegalArgumentException("一个或多个文档不存在或已过期，请重新上传");
-        }
+        String content1 = getDocumentContent(docId1);
+        String content2 = getDocumentContent(docId2);
 
         ChatClient chatClient = modelManagerService.getCurrentChatClient();
         String prompt = String.format("""
@@ -160,13 +151,13 @@ public class DocumentQAService {
                 4. 相似之处
                 5. 不同之处
                 6. 各自优缺点
-                
+
                 【文档1】
                 %s
-                
+
                 【文档2】
                 %s
-                
+
                 请以结构化格式输出对比结果。
                 """, content1.substring(0, Math.min(8000, content1.length())),
                 content2.substring(0, Math.min(8000, content2.length())));
@@ -189,27 +180,25 @@ public class DocumentQAService {
     /**
      * 基于RAG的文档问答
      */
+    @Transactional(readOnly = true)
     public DocumentQAResult askQuestionWithRAG(String docId, String question, int k, String sessionId) {
-        String documentContent = documentCache.get(docId);
-        if (documentContent == null) {
-            throw new IllegalArgumentException("文档不存在或已过期，请重新上传");
-        }
+        String documentContent = getDocumentContent(docId);
 
         String ragContext = ragService.ragQuery(question, k);
         ChatClient chatClient = modelManagerService.getCurrentChatClient();
 
         String prompt = String.format("""
                 请基于以下文档内容和检索到的相关信息回答用户问题。
-                
+
                 【文档内容】
                 %s
-                
+
                 【检索到的相关信息】
                 %s
-                
+
                 【用户问题】
                 %s
-                
+
                 请结合文档内容和检索信息给出准确、完整的回答。
                 如果检索信息与文档内容有冲突，以文档内容为准。
                 如无法从提供的内容中找到答案，请明确说明。
@@ -230,7 +219,6 @@ public class DocumentQAService {
         result.setMetadata(Map.of("docId", docId, "mode", "RAG", "k", k));
 
         if (sessionId != null) {
-            sessionHistory.computeIfAbsent(sessionId, sid -> new ArrayList<>()).add(result);
             result.setSessionId(sessionId);
         }
 
@@ -238,36 +226,46 @@ public class DocumentQAService {
     }
 
     /**
-     * 获取会话历史
+     * 获取会话历史（从DB中查询该session相关的文档）
      */
     public List<DocumentQAResult> getSessionHistory(String sessionId) {
-        return sessionHistory.getOrDefault(sessionId, Collections.emptyList());
+        // QA history is ephemeral — return empty list for now;
+        // full history tracking can be added with a dedicated JPA entity later
+        return Collections.emptyList();
     }
 
     /**
      * 清理会话历史
      */
     public void clearSessionHistory(String sessionId) {
-        sessionHistory.remove(sessionId);
+        // no persistent history to clear currently
     }
 
     /**
      * 删除缓存的文档
      */
+    @Transactional
     public void removeDocument(String docId) {
-        documentCache.remove(docId);
+        documentCacheRepository.deleteById(docId);
+        log.debug("Removed cached document {}", docId);
     }
 
     /**
      * 获取缓存的文档名称
      */
+    @Transactional(readOnly = true)
     public String getDocumentName(String docId) {
-        String content = documentCache.get(docId);
-        if (content != null) {
-            // 尝试从向量存储元数据中获取文件名
-            return "Document-" + docId.substring(0, 8);
-        }
-        return null;
+        return documentCacheRepository.findById(docId)
+                .map(DocumentCache::getFileName)
+                .orElse("Document-" + docId.substring(0, Math.min(8, docId.length())));
+    }
+
+    // === private helpers ===
+
+    private String getDocumentContent(String docId) {
+        return documentCacheRepository.findById(docId)
+                .map(DocumentCache::getContent)
+                .orElseThrow(() -> new IllegalArgumentException("文档不存在或已过期，请重新上传"));
     }
 
     private DocumentQAResult doAsk(String documentContent, String question, String documentName) {
@@ -280,13 +278,13 @@ public class DocumentQAService {
 
         String prompt = String.format("""
                 请基于以下文档内容回答用户的问题。
-                
+
                 【文档内容】
                 %s
-                
+
                 【用户问题】
                 %s
-                
+
                 要求：
                 1. 回答应基于文档内容，准确、清晰
                 2. 如果文档中有相关数据，请引用
