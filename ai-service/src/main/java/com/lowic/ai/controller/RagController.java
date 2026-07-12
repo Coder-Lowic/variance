@@ -1,5 +1,6 @@
 package com.lowic.ai.controller;
 
+import com.lowic.ai.dto.RagQueryRequest;
 import com.lowic.ai.service.RagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -85,10 +86,9 @@ public class RagController {
 
     @Operation(summary = "RAG查询", description = "基于检索增强生成回答")
     @PostMapping("/query")
-    public ResponseEntity<String> ragQuery(@RequestBody Map<String, Object> request) {
-        String prompt = (String) request.get("prompt");
-        int k = request.containsKey("k") ? (Integer) request.get("k") : 3;
-        String answer = ragService.ragQuery(prompt, k);
+    public ResponseEntity<String> ragQuery(@RequestBody RagQueryRequest request) {
+        int k = request.k() != null ? request.k() : 3;
+        String answer = ragService.ragQuery(request.query(), k);
         return ResponseEntity.ok(answer);
     }
 

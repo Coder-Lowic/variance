@@ -1,5 +1,6 @@
 package com.lowic.ai.controller;
 
+import com.lowic.ai.dto.ModerationRequest;
 import com.lowic.ai.entity.ContentModerationResult;
 import com.lowic.ai.service.ContentModerationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "内容审核", description = "内容审核相关的API接口，包括文本、图片、视频审核等")
@@ -25,10 +25,9 @@ public class ContentModerationController {
 
     @Operation(summary = "文本内容审核", description = "对文本内容进行AI审核，检测违规内容")
     @PostMapping("/text")
-    public ResponseEntity<ContentModerationResult> moderateText(@RequestBody Map<String, String> request) {
-        String content = request.get("content");
-        String contentId = request.getOrDefault("contentId", UUID.randomUUID().toString());
-        ContentModerationResult result = contentModerationService.moderateText(content, contentId);
+    public ResponseEntity<ContentModerationResult> moderateText(@RequestBody ModerationRequest request) {
+        String contentId = request.contentId() != null ? request.contentId() : UUID.randomUUID().toString();
+        ContentModerationResult result = contentModerationService.moderateText(request.content(), contentId);
         return ResponseEntity.ok(result);
     }
 
@@ -36,50 +35,31 @@ public class ContentModerationController {
     @PostMapping("/image")
     public ResponseEntity<ContentModerationResult> moderateImage(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "contentId", required = false) String contentId) {
-        try {
-            if (contentId == null) {
-                contentId = UUID.randomUUID().toString();
-            }
-            ContentModerationResult result = contentModerationService.moderateImage(file, contentId);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            ContentModerationResult errorResult = new ContentModerationResult();
-            errorResult.setContentId(contentId);
-            errorResult.setSafe(false);
-            errorResult.setOverallRiskLevel("high");
-            errorResult.setDetails(Map.of("error", e.getMessage()));
-            return ResponseEntity.badRequest().body(errorResult);
+            @RequestParam(value = "contentId", required = false) String contentId) throws Exception {
+        if (contentId == null) {
+            contentId = UUID.randomUUID().toString();
         }
+        ContentModerationResult result = contentModerationService.moderateImage(file, contentId);
+        return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "视频内容审核", description = "对视频内容进行AI审核")
     @PostMapping("/video")
     public ResponseEntity<ContentModerationResult> moderateVideo(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "contentId", required = false) String contentId) {
-        try {
-            if (contentId == null) {
-                contentId = UUID.randomUUID().toString();
-            }
-            ContentModerationResult result = contentModerationService.moderateVideo(file, contentId);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            ContentModerationResult errorResult = new ContentModerationResult();
-            errorResult.setContentId(contentId);
-            errorResult.setSafe(false);
-            errorResult.setOverallRiskLevel("high");
-            errorResult.setDetails(Map.of("error", e.getMessage()));
-            return ResponseEntity.badRequest().body(errorResult);
+            @RequestParam(value = "contentId", required = false) String contentId) throws Exception {
+        if (contentId == null) {
+            contentId = UUID.randomUUID().toString();
         }
+        ContentModerationResult result = contentModerationService.moderateVideo(file, contentId);
+        return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "敏感信息过滤", description = "检测并过滤文本中的敏感信息（手机号、邮箱、身份证号等）")
     @PostMapping("/sensitive")
-    public ResponseEntity<ContentModerationResult> filterSensitiveInfo(@RequestBody Map<String, String> request) {
-        String content = request.get("content");
-        String contentId = request.getOrDefault("contentId", UUID.randomUUID().toString());
-        ContentModerationResult result = contentModerationService.filterSensitiveInfo(content, contentId);
+    public ResponseEntity<ContentModerationResult> filterSensitiveInfo(@RequestBody ModerationRequest request) {
+        String contentId = request.contentId() != null ? request.contentId() : UUID.randomUUID().toString();
+        ContentModerationResult result = contentModerationService.filterSensitiveInfo(request.content(), contentId);
         return ResponseEntity.ok(result);
     }
 
@@ -98,22 +78,13 @@ public class ContentModerationController {
             @RequestParam(value = "checkSensitiveInfo", defaultValue = "true") boolean checkSensitiveInfo,
             @RequestParam(value = "checkAI", defaultValue = "true") boolean checkAI,
             @RequestParam(value = "checkImage", defaultValue = "false") boolean checkImage,
-            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
-        try {
-            if (contentId == null) {
-                contentId = UUID.randomUUID().toString();
-            }
-            ContentModerationResult result = contentModerationService.comprehensiveModeration(
-                    content, contentId, checkSensitiveInfo, checkAI, checkImage, imageFile);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            ContentModerationResult errorResult = new ContentModerationResult();
-            errorResult.setContentId(contentId);
-            errorResult.setSafe(false);
-            errorResult.setOverallRiskLevel("high");
-            errorResult.setDetails(Map.of("error", e.getMessage()));
-            return ResponseEntity.badRequest().body(errorResult);
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) throws Exception {
+        if (contentId == null) {
+            contentId = UUID.randomUUID().toString();
         }
+        ContentModerationResult result = contentModerationService.comprehensiveModeration(
+                content, contentId, checkSensitiveInfo, checkAI, checkImage, imageFile);
+        return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "快速检查内容安全", description = "快速检查内容是否安全，返回布尔值")
@@ -122,7 +93,7 @@ public class ContentModerationController {
         String content = request.get("content");
         String contentId = request.getOrDefault("contentId", UUID.randomUUID().toString());
         ContentModerationResult result = contentModerationService.moderateText(content, contentId);
-        
+
         return ResponseEntity.ok(Map.of(
                 "isSafe", result.isSafe(),
                 "riskLevel", result.getOverallRiskLevel(),

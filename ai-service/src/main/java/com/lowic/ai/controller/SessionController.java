@@ -1,5 +1,6 @@
 package com.lowic.ai.controller;
 
+import com.lowic.ai.dto.SessionCreateRequest;
 import com.lowic.ai.entity.ChatSession;
 import com.lowic.ai.service.SessionManagerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "会话管理", description = "会话管理相关的API接口")
 @RestController
@@ -23,9 +23,8 @@ public class SessionController {
 
     @Operation(summary = "创建会话", description = "创建新的对话会话")
     @PostMapping
-    public ResponseEntity<ChatSession> createSession(@RequestBody Map<String, String> request) {
-        String userId = request.get("userId");
-        ChatSession session = sessionManagerService.createSession(userId);
+    public ResponseEntity<ChatSession> createSession(@RequestBody SessionCreateRequest request) {
+        ChatSession session = sessionManagerService.createSession(request.userId());
         return ResponseEntity.ok(session);
     }
 
@@ -49,9 +48,9 @@ public class SessionController {
 
     @Operation(summary = "删除会话", description = "删除指定会话")
     @DeleteMapping("/{sessionId}")
-    public ResponseEntity<Map<String, Object>> deleteSession(@PathVariable String sessionId) {
+    public ResponseEntity<java.util.Map<String, Object>> deleteSession(@PathVariable String sessionId) {
         sessionManagerService.deleteSession(sessionId);
-        return ResponseEntity.ok(Map.of(
+        return ResponseEntity.ok(java.util.Map.of(
                 "success", true
         ));
     }

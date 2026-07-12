@@ -1,5 +1,7 @@
 package com.lowic.ai.controller;
 
+import com.lowic.ai.dto.ChatRequest;
+import com.lowic.ai.dto.ModelSwitchRequest;
 import com.lowic.ai.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,27 +26,23 @@ public class ChatController {
 
     @Operation(summary = "发送消息", description = "向AI发送消息并获取回复")
     @PostMapping("/send")
-    public ResponseEntity<String> sendMessage(@RequestBody Map<String, String> request) {
-        String message = request.get("message");
-        String response = chatService.chat(message);
+    public ResponseEntity<String> sendMessage(@RequestBody ChatRequest request) {
+        String response = chatService.chat(request.message());
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "发送消息（带系统提示）", description = "使用自定义系统提示向AI发送消息")
     @PostMapping("/send/system")
-    public ResponseEntity<String> sendMessageWithSystemPrompt(@RequestBody Map<String, String> request) {
-        String systemPrompt = request.get("systemPrompt");
-        String userMessage = request.get("message");
-        String response = chatService.chatWithSystemPrompt(systemPrompt, userMessage);
+    public ResponseEntity<String> sendMessageWithSystemPrompt(@RequestBody ChatRequest request) {
+        String response = chatService.chatWithSystemPrompt(request.systemPrompt(), request.message());
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "RAG增强对话", description = "基于检索增强生成的对话")
     @PostMapping("/rag")
-    public ResponseEntity<String> chatWithRAG(@RequestBody Map<String, Object> request) {
-        String message = (String) request.get("message");
-        int k = request.containsKey("k") ? (Integer) request.get("k") : 3;
-        String response = chatService.chatWithRAG(message, k);
+    public ResponseEntity<String> chatWithRAG(@RequestBody ChatRequest request) {
+        int k = request.k() != null ? request.k() : 3;
+        String response = chatService.chatWithRAG(request.message(), k);
         return ResponseEntity.ok(response);
     }
 
@@ -60,13 +58,11 @@ public class ChatController {
 
     @Operation(summary = "切换模型", description = "切换当前使用的AI模型")
     @PostMapping("/model")
-    public ResponseEntity<Map<String, Object>> switchModel(@RequestBody Map<String, String> request) {
-        String provider = request.get("provider");
-        String model = request.get("model");
-        chatService.switchModel(provider, model);
+    public ResponseEntity<Map<String, Object>> switchModel(@RequestBody ModelSwitchRequest request) {
+        chatService.switchModel(request.provider(), request.model());
         return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "已切换到 " + provider + " 模型"
+                "message", "已切换到 " + request.provider() + " 模型"
         ));
     }
 

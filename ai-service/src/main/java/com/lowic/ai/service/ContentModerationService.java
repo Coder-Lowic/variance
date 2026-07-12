@@ -4,7 +4,6 @@ import com.lowic.ai.entity.ContentModerationResult;
 import com.lowic.ai.entity.ModerationCategory;
 import com.lowic.ai.entity.ModerationRiskLevel;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,10 +14,14 @@ import java.util.regex.Pattern;
 @Service
 public class ContentModerationService {
 
+    private static final Pattern PHONE_PATTERN = Pattern.compile("1[3-9]\\d{9}");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("\\w+@\\w+\\.\\w+");
+    private static final Pattern ID_CARD_PATTERN = Pattern.compile("\\d{17}[\\dXx]");
+    private static final Pattern BANK_CARD_PATTERN = Pattern.compile("\\d{16,19}");
+
     private final ModelManagerService modelManagerService;
     private final MultimodalService multimodalService;
 
-    @Autowired
     public ContentModerationService(ModelManagerService modelManagerService, MultimodalService multimodalService) {
         this.modelManagerService = modelManagerService;
         this.multimodalService = multimodalService;
@@ -156,12 +159,7 @@ public class ContentModerationService {
         String filteredContent = content;
         Map<String, List<String>> detectedInfo = new HashMap<>();
 
-        Pattern phonePattern = Pattern.compile("1[3-9]\\d{9}");
-        Pattern emailPattern = Pattern.compile("\\w+@\\w+\\.\\w+");
-        Pattern idCardPattern = Pattern.compile("\\d{17}[\\dXx]");
-        Pattern bankCardPattern = Pattern.compile("\\d{16,19}");
-
-        java.util.regex.Matcher matcher = phonePattern.matcher(content);
+        java.util.regex.Matcher matcher = PHONE_PATTERN.matcher(content);
         List<String> phones = new ArrayList<>();
         while (matcher.find()) {
             phones.add(matcher.group());
@@ -169,7 +167,7 @@ public class ContentModerationService {
         }
         if (!phones.isEmpty()) detectedInfo.put("phones", phones);
 
-        matcher = emailPattern.matcher(content);
+        matcher = EMAIL_PATTERN.matcher(content);
         List<String> emails = new ArrayList<>();
         while (matcher.find()) {
             emails.add(matcher.group());
@@ -177,7 +175,7 @@ public class ContentModerationService {
         }
         if (!emails.isEmpty()) detectedInfo.put("emails", emails);
 
-        matcher = idCardPattern.matcher(content);
+        matcher = ID_CARD_PATTERN.matcher(content);
         List<String> idCards = new ArrayList<>();
         while (matcher.find()) {
             idCards.add(matcher.group());
@@ -187,7 +185,7 @@ public class ContentModerationService {
 
         List<ModerationCategory> categories = new ArrayList<>();
         boolean hasSensitiveInfo = !detectedInfo.isEmpty();
-        categories.add(new ModerationCategory("sensitive_info", hasSensitiveInfo, 
+        categories.add(new ModerationCategory("sensitive_info", hasSensitiveInfo,
                 hasSensitiveInfo ? 0.7 : 0.0, hasSensitiveInfo ? "high" : "low"));
 
         Map<String, Object> details = new HashMap<>();

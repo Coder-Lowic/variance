@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -22,8 +21,11 @@ import java.util.List;
 @RequestMapping("export")
 @RestController
 public class ExportController {
-    @Resource
-    private IExportService iExportService;
+    private final IExportService iExportService;
+
+    public ExportController(IExportService iExportService) {
+        this.iExportService = iExportService;
+    }
 
 
     @PostMapping("exportSpAdRpCombineBuRp")

@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -35,12 +34,17 @@ import java.util.List;
 @RestController
 @RequestMapping("analysis")
 public class AnalysisController {
-    @Resource
-    private IAnalysisService iAnalysisService;
-    @Resource
-    private IImportOperateRecordService iImportOperateRecordService;
-    @Resource
-    private SqlSessionTemplate sqlSessionTemplate;
+    private final IAnalysisService iAnalysisService;
+    private final IImportOperateRecordService iImportOperateRecordService;
+    private final SqlSessionTemplate sqlSessionTemplate;
+
+    public AnalysisController(IAnalysisService iAnalysisService,
+                              IImportOperateRecordService iImportOperateRecordService,
+                              SqlSessionTemplate sqlSessionTemplate) {
+        this.iAnalysisService = iAnalysisService;
+        this.iImportOperateRecordService = iImportOperateRecordService;
+        this.sqlSessionTemplate = sqlSessionTemplate;
+    }
 
     private static final int BATCH_COUNT = 5000;
 

@@ -6,7 +6,6 @@ import com.lowic.data.analysis.export.vo.SpOrSdCombineBr;
 import com.lowic.data.analysis.service.IAnalysisService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -14,8 +13,11 @@ import java.util.List;
  */
 @Service
 public class IExportServiceImpl implements IExportService {
-    @Resource
-    private IAnalysisService iAnalysisService;
+    private final IAnalysisService iAnalysisService;
+
+    public IExportServiceImpl(IAnalysisService iAnalysisService) {
+        this.iAnalysisService = iAnalysisService;
+    }
 
     @Override
     public List<SpOrSdCombineBr> assembleSpAndSdCombineBuRpExportList() {

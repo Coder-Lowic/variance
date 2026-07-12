@@ -3,7 +3,6 @@ package com.lowic.ai.service;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,7 +18,6 @@ public class RagService {
     private final ModelManagerService modelManagerService;
     private final MultimodalService multimodalService;
 
-    @Autowired
     public RagService(VectorStore vectorStore, ModelManagerService modelManagerService, MultimodalService multimodalService) {
         this.vectorStore = vectorStore;
         this.modelManagerService = modelManagerService;

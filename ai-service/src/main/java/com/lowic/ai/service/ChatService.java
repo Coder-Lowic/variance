@@ -1,38 +1,36 @@
 package com.lowic.ai.service;
 
 import com.lowic.ai.entity.ChatSession;
+import com.lowic.ai.exception.SessionNotFoundException;
+import com.lowic.ai.model.ModelConfig;
+import com.lowic.ai.model.ModelProvider;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+/**
+ * 核心对话服务 — 仅负责聊天与会话管理。
+ * 文档生成、多模态分析、个性化推荐等请直接注入对应 Service。
+ */
 @Service
 public class ChatService {
 
     private final ModelManagerService modelManagerService;
-    private final SpeechToTextService speechToTextService;
     private final SessionManagerService sessionManagerService;
-    private final MultimodalService multimodalService;
-    private final DocumentGeneratorService documentGeneratorService;
     private final RagService ragService;
-    private final PersonalizedRecommendationService personalizedRecommendationService;
 
-    public ChatService(ModelManagerService modelManagerService, SpeechToTextService speechToTextService, SessionManagerService sessionManagerService, MultimodalService multimodalService, DocumentGeneratorService documentGeneratorService, RagService ragService, PersonalizedRecommendationService personalizedRecommendationService) {
+    public ChatService(ModelManagerService modelManagerService,
+                       SessionManagerService sessionManagerService,
+                       RagService ragService) {
         this.modelManagerService = modelManagerService;
-        this.speechToTextService = speechToTextService;
         this.sessionManagerService = sessionManagerService;
-        this.multimodalService = multimodalService;
-        this.documentGeneratorService = documentGeneratorService;
         this.ragService = ragService;
-        this.personalizedRecommendationService = personalizedRecommendationService;
     }
+
+    // ──── 基础对话 ────
 
     public String chat(String message) {
         ChatClient chatClient = modelManagerService.getCurrentChatClient();
@@ -51,385 +49,61 @@ public class ChatService {
                 .content();
     }
 
-    public String chatWithAttachment(String message, String attachmentContent, String attachmentName) {
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        
-        String userPrompt = String.format("""
-                用户问题：%s
-                
-                附件内容（文件名：%s）：
-                %s
-                
-                请基于附件内容回答用户的问题。
-                """, message, attachmentName, attachmentContent);
-        
-        return chatClient.prompt()
-                .user(userPrompt)
-                .call()
-                .content();
-    }
+    // ──── 会话对话 ────
 
-    public String chatWithAttachmentAndSystemPrompt(String systemPrompt, String message, String attachmentContent, String attachmentName) {
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        
-        String userPrompt = String.format("""
-                用户问题：%s
-                
-                附件内容（文件名：%s）：
-                %s
-                
-                请基于附件内容回答用户的问题。
-                """, message, attachmentName, attachmentContent);
-        
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user(userPrompt)
-                .call()
-                .content();
-    }
-
-    public String chatWithImage(String message, String imageBase64, String imageName) {
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        
-        // 简化实现，将图片作为base64文本包含在消息中
-        String userPrompt = String.format("%s\n\n[Image: %s]\n%s", message, imageName, imageBase64);
-        
-        return chatClient.prompt()
-                .user(userPrompt)
-                .call()
-                .content();
-    }
-
-    public String chatWithImageAndSystemPrompt(String systemPrompt, String message, String imageBase64, String imageName) {
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        
-        // 简化实现，将图片作为base64文本包含在消息中
-        String userPrompt = String.format("%s\n\n[Image: %s]\n%s", message, imageName, imageBase64);
-        
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user(userPrompt)
-                .call()
-                .content();
-    }
-
-    public String chatWithVoice(MultipartFile audioFile, String model) throws IOException {
-        String text = speechToTextService.transcribe(audioFile, model);
-        return chat(text);
-    }
-
-    public String chatWithVoiceAndSystemPrompt(String systemPrompt, MultipartFile audioFile, String model) throws IOException {
-        String text = speechToTextService.transcribe(audioFile, model);
-        return chatWithSystemPrompt(systemPrompt, text);
-    }
-
-    // 基于会话的聊天方法，支持上下文理解
     public String chatWithSession(String sessionId, String message) {
-        ChatSession session = sessionManagerService.getSession(sessionId);
-        if (session == null) {
-            throw new IllegalArgumentException("Session not found");
-        }
-
-        // 添加用户消息到会话
+        ChatSession session = requireSession(sessionId);
         session.addMessage("user", message);
 
-        // 构建包含历史消息的提示
-        StringBuilder promptBuilder = new StringBuilder();
-        for (com.lowic.ai.entity.ChatMessage msg : session.getMessages()) {
-            if (msg.getRole().equals("user")) {
-                promptBuilder.append("用户：").append(msg.getContent()).append("\n");
-            } else if (msg.getRole().equals("assistant")) {
-                promptBuilder.append("助手：").append(msg.getContent()).append("\n");
-            }
-        }
-        promptBuilder.append("用户：").append(message).append("\n助手：");
-
-        // 调用模型获取回复
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        String response = chatClient.prompt()
-                .user(promptBuilder.toString())
-                .call()
-                .content();
-
-        // 添加模型回复到会话
+        String response = chat(buildConversationContext(session, message));
         session.addMessage("assistant", response);
         sessionManagerService.saveSession(session);
 
         return response;
     }
 
-    // 基于会话的聊天方法，支持系统提示和上下文理解
     public String chatWithSessionAndSystemPrompt(String sessionId, String systemPrompt, String message) {
-        ChatSession session = sessionManagerService.getSession(sessionId);
-        if (session == null) {
-            throw new IllegalArgumentException("Session not found");
-        }
-
-        // 添加用户消息到会话
+        ChatSession session = requireSession(sessionId);
         session.addMessage("user", message);
 
-        // 构建包含历史消息的提示
-        StringBuilder promptBuilder = new StringBuilder();
-        for (com.lowic.ai.entity.ChatMessage msg : session.getMessages()) {
-            if (msg.getRole().equals("user")) {
-                promptBuilder.append("用户：").append(msg.getContent()).append("\n");
-            } else if (msg.getRole().equals("assistant")) {
-                promptBuilder.append("助手：").append(msg.getContent()).append("\n");
-            }
-        }
-        promptBuilder.append("用户：").append(message).append("\n助手：");
-
-        // 调用模型获取回复
         ChatClient chatClient = modelManagerService.getCurrentChatClient();
         String response = chatClient.prompt()
                 .system(systemPrompt)
-                .user(promptBuilder.toString())
+                .user(buildConversationContext(session, message))
                 .call()
                 .content();
 
-        // 添加模型回复到会话
         session.addMessage("assistant", response);
         sessionManagerService.saveSession(session);
 
         return response;
     }
 
-    // 获取会话历史
-    public List<com.lowic.ai.entity.ChatMessage> getSessionHistory(String sessionId) {
-        ChatSession session = sessionManagerService.getSession(sessionId);
-        if (session == null) {
-            throw new IllegalArgumentException("Session not found");
-        }
-        return session.getMessages();
-    }
+    // ──── RAG 对话 ────
 
-    // 创建新会话
-    public ChatSession createSession(String userId) {
-        return sessionManagerService.createSession(userId);
-    }
-
-    // 列出用户的所有会话
-    public List<ChatSession> listSessions(String userId) {
-        return sessionManagerService.listSessions(userId);
-    }
-
-    // 删除会话
-    public void deleteSession(String sessionId) {
-        sessionManagerService.deleteSession(sessionId);
-    }
-
-    // 基于图片的聊天方法
-    public String chatWithImageFile(MultipartFile imageFile, String prompt) throws IOException {
-        return multimodalService.analyzeImage(imageFile, prompt);
-    }
-
-    // 基于视频的聊天方法
-    public String chatWithVideoFile(MultipartFile videoFile, String prompt) throws IOException {
-        return multimodalService.analyzeVideo(videoFile, prompt);
-    }
-
-    // 基于多模态内容的聊天方法
-    public String chatWithMultimodal(MultipartFile imageFile, MultipartFile videoFile, String prompt) throws IOException {
-        return multimodalService.analyzeMultimodal(imageFile, videoFile, prompt);
-    }
-
-    // 带有系统提示的基于图片的聊天方法
-    public String chatWithImageFileAndSystemPrompt(String systemPrompt, MultipartFile imageFile, String prompt) throws IOException {
-        // 先分析图片内容
-        String imageAnalysis = multimodalService.analyzeImage(imageFile, prompt);
-        
-        // 然后使用系统提示进行进一步处理
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user("图片分析结果：" + imageAnalysis)
-                .call()
-                .content();
-    }
-
-    // 带有系统提示的基于视频的聊天方法
-    public String chatWithVideoFileAndSystemPrompt(String systemPrompt, MultipartFile videoFile, String prompt) throws IOException {
-        // 先分析视频内容
-        String videoAnalysis = multimodalService.analyzeVideo(videoFile, prompt);
-        
-        // 然后使用系统提示进行进一步处理
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user("视频分析结果：" + videoAnalysis)
-                .call()
-                .content();
-    }
-
-    // 带有系统提示的基于多模态内容的聊天方法
-    public String chatWithMultimodalAndSystemPrompt(String systemPrompt, MultipartFile imageFile, MultipartFile videoFile, String prompt) throws IOException {
-        // 先分析多模态内容
-        String multimodalAnalysis = multimodalService.analyzeMultimodal(imageFile, videoFile, prompt);
-        
-        // 然后使用系统提示进行进一步处理
-        ChatClient chatClient = modelManagerService.getCurrentChatClient();
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user("多模态分析结果：" + multimodalAnalysis)
-                .call()
-                .content();
-    }
-
-    // 生成文档
-    public String generateDocument(String documentType, String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateDocument(documentType, content, parameters);
-    }
-
-    // 生成报告
-    public String generateReport(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateReport(content, parameters);
-    }
-
-    // 生成邮件
-    public String generateEmail(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateEmail(content, parameters);
-    }
-
-    // 生成合同
-    public String generateContract(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateContract(content, parameters);
-    }
-
-    // 生成简历
-    public String generateResume(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateResume(content, parameters);
-    }
-
-    // 生成会议纪要
-    public String generateMeetingMinutes(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateMeetingMinutes(content, parameters);
-    }
-
-    // 生成产品需求文档
-    public String generateProductRequirement(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateProductRequirement(content, parameters);
-    }
-
-    // 生成技术方案文档
-    public String generateTechnicalSolution(String content, java.util.Map<String, Object> parameters) {
-        return documentGeneratorService.generateTechnicalSolution(content, parameters);
-    }
-
-    // 基于RAG的聊天方法
     public String chatWithRAG(String message, int k) {
         return ragService.ragQuery(message, k);
     }
 
-    // 基于RAG的聊天方法（带系统提示）
-    public String chatWithRAGAndSystemPrompt(String systemPrompt, String message, int k) {
-        return ragService.ragQueryWithSystemPrompt(systemPrompt, message, k);
-    }
-
-    // 基于RAG的会话聊天方法
-    public String chatWithRAGAndSession(String sessionId, String message, int k) {
-        // 添加用户消息到会话
-        com.lowic.ai.entity.ChatSession session = sessionManagerService.getSession(sessionId);
-        if (session == null) {
-            throw new IllegalArgumentException("Session not found");
-        }
-        session.addMessage("user", message);
-
-        // 基于RAG生成回复
-        String response = ragService.ragQueryWithSession(sessionId, message, k);
-
-        // 添加模型回复到会话
-        session.addMessage("assistant", response);
-        sessionManagerService.saveSession(session);
-
-        return response;
-    }
-
-    // 向向量存储中添加文本
-    public int addText(String text, java.util.Map<String, Object> metadata) {
-        return ragService.addText(text, metadata);
-    }
-
-    // 从向量存储中删除文档
-    public boolean deleteDocument(String documentId) {
-        return ragService.deleteDocument(documentId);
-    }
-
-    // 搜索向量存储中的文档
-    public java.util.List<org.springframework.ai.document.Document> searchDocuments(String query, int k) {
-        return ragService.searchDocuments(query, k);
-    }
-
-    // 向向量存储中添加图像
-    public int addImage(org.springframework.web.multipart.MultipartFile imageFile, java.util.Map<String, Object> metadata) throws java.io.IOException {
-        return ragService.addImage(imageFile, metadata);
-    }
-
-    // 向向量存储中添加视频
-    public int addVideo(org.springframework.web.multipart.MultipartFile videoFile, java.util.Map<String, Object> metadata) throws java.io.IOException {
-        return ragService.addVideo(videoFile, metadata);
-    }
-
-    // 基于图像的RAG查询
-    public String chatWithRAGAndImage(org.springframework.web.multipart.MultipartFile imageFile, String prompt, int k) throws java.io.IOException {
+    public String chatWithRAGAndImage(MultipartFile imageFile, String prompt, int k) throws IOException {
         return ragService.ragQueryWithImage(imageFile, prompt, k);
     }
 
-    // 分析用户偏好
-    public java.util.Map<String, Object> analyzeUserPreferences(String userId) {
-        return personalizedRecommendationService.analyzeUserPreferences(userId);
-    }
+    // ──── 模型管理 ────
 
-    // 生成个性化推荐
-    public java.util.List<String> generateRecommendations(String userId, String context, int recommendationCount) {
-        return personalizedRecommendationService.generateRecommendations(userId, context, recommendationCount);
-    }
-
-    // 生成个性化欢迎消息
-    public String generatePersonalizedWelcomeMessage(String userId) {
-        return personalizedRecommendationService.generatePersonalizedWelcomeMessage(userId);
-    }
-
-    // 生成个性化内容建议
-    public java.util.List<String> generateContentSuggestions(String userId, String contentType, int count) {
-        return personalizedRecommendationService.generateContentSuggestions(userId, contentType, count);
-    }
-
-    // 基于RAG的个性化推荐
-    public java.util.List<String> generateRAGBasedRecommendations(String userId, String context, int recommendationCount) {
-        return personalizedRecommendationService.generateRAGBasedRecommendations(userId, context, recommendationCount);
-    }
-
-    // 基于用户偏好的个性化内容生成
-    public String generatePersonalizedContent(String userId, String contentTemplate) {
-        return personalizedRecommendationService.generatePersonalizedContent(userId, contentTemplate);
-    }
-
-    // 个性化文档推荐
-    public java.util.List<org.springframework.ai.document.Document> recommendDocuments(String userId, String query, int count) {
-        return personalizedRecommendationService.recommendDocuments(userId, query, count);
-    }
-
-    // 个性化问答建议
-    public String generatePersonalizedAnswer(String userId, String question) {
-        return personalizedRecommendationService.generatePersonalizedAnswer(userId, question);
-    }
-
-    // 切换模型
     public void switchModel(String provider, String model) {
-        com.lowic.ai.model.ModelConfig config = new com.lowic.ai.model.ModelConfig();
-        config.setProvider(com.lowic.ai.model.ModelProvider.valueOf(provider.toUpperCase()));
+        ModelConfig config = new ModelConfig();
+        config.setProvider(ModelProvider.valueOf(provider.toUpperCase()));
         config.setModelName(model);
         config.setTemperature(0.7);
         config.setMaxTokens(2048);
         modelManagerService.switchModel(config);
     }
 
-    // 获取可用模型列表
-    public java.util.List<java.util.Map<String, String>> getAvailableModels() {
-        java.util.List<java.util.Map<String, String>> models = new java.util.ArrayList<>();
-        var modelMap = modelManagerService.getAvailableModels();
-        for (var entry : modelMap.entrySet()) {
-            java.util.Map<String, String> item = new java.util.HashMap<>();
+    public List<Map<String, String>> getAvailableModels() {
+        List<Map<String, String>> models = new ArrayList<>();
+        for (var entry : modelManagerService.getAvailableModels().entrySet()) {
+            Map<String, String> item = new HashMap<>();
             item.put("provider", entry.getKey().name());
             item.put("models", entry.getValue());
             models.add(item);
@@ -437,12 +111,34 @@ public class ChatService {
         return models;
     }
 
-    // 获取当前模型
-    public java.util.Map<String, String> getCurrentModel() {
-        java.util.Map<String, String> result = new java.util.HashMap<>();
-        result.put("provider", modelManagerService.getCurrentModelConfig().getProvider().name());
-        result.put("model", modelManagerService.getCurrentModelConfig().getModelName());
-        return result;
+    public Map<String, String> getCurrentModel() {
+        ModelConfig config = modelManagerService.getCurrentModelConfig();
+        return Map.of(
+                "provider", config.getProvider().name(),
+                "model", config.getModelName()
+        );
+    }
+
+    // ──── 私有方法 ────
+
+    private ChatSession requireSession(String sessionId) {
+        ChatSession session = sessionManagerService.getSession(sessionId);
+        if (session == null) {
+            throw new SessionNotFoundException(sessionId);
+        }
+        return session;
+    }
+
+    private String buildConversationContext(ChatSession session, String currentMessage) {
+        StringBuilder sb = new StringBuilder();
+        for (var msg : session.getMessages()) {
+            if ("user".equals(msg.getRole())) {
+                sb.append("用户：").append(msg.getContent()).append("\n");
+            } else if ("assistant".equals(msg.getRole())) {
+                sb.append("助手：").append(msg.getContent()).append("\n");
+            }
+        }
+        sb.append("用户：").append(currentMessage).append("\n助手：");
+        return sb.toString();
     }
 }
-

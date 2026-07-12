@@ -3,7 +3,6 @@ package com.lowic.ai.service;
 import com.lowic.ai.entity.ChatSession;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +17,6 @@ public class PersonalizedRecommendationService {
     private final SessionManagerService sessionManagerService;
     private final RagService ragService;
 
-    @Autowired
     public PersonalizedRecommendationService(ModelManagerService modelManagerService, SessionManagerService sessionManagerService, RagService ragService) {
         this.modelManagerService = modelManagerService;
         this.sessionManagerService = sessionManagerService;

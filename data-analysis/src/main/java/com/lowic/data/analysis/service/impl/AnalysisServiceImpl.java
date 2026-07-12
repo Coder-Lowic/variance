@@ -6,7 +6,6 @@ import com.lowic.data.analysis.mapper.AnalysisMapper;
 import com.lowic.data.analysis.service.IAnalysisService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -14,8 +13,11 @@ import java.util.List;
  */
 @Service
 public class AnalysisServiceImpl implements IAnalysisService {
-    @Resource
-    private AnalysisMapper analysisMapper;
+    private final AnalysisMapper analysisMapper;
+
+    public AnalysisServiceImpl(AnalysisMapper analysisMapper) {
+        this.analysisMapper = analysisMapper;
+    }
 
     @Override
     public List<SpOrSdCombineBr> listSpAdRpAndSpAdRpCombineBuRp() {

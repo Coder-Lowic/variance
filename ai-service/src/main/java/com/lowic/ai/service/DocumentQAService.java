@@ -2,6 +2,7 @@ package com.lowic.ai.service;
 
 import com.lowic.ai.entity.DocumentCache;
 import com.lowic.ai.entity.DocumentQAResult;
+import com.lowic.ai.exception.DocumentNotFoundException;
 import com.lowic.ai.repository.DocumentCacheRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -265,7 +266,7 @@ public class DocumentQAService {
     private String getDocumentContent(String docId) {
         return documentCacheRepository.findById(docId)
                 .map(DocumentCache::getContent)
-                .orElseThrow(() -> new IllegalArgumentException("文档不存在或已过期，请重新上传"));
+                .orElseThrow(() -> new DocumentNotFoundException(docId));
     }
 
     private DocumentQAResult doAsk(String documentContent, String question, String documentName) {
