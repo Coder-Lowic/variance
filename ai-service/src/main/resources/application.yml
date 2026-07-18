@@ -14,12 +14,16 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
   ai:
     openai:
       api-key: ${OPENAI_API_KEY:}
@@ -67,6 +71,10 @@ moderation:
     - spam
   defaultRiskThreshold: medium
   autoFilter: true
+
+jwt:
+  secret: ${JWT_SECRET:VarianceJwtSecretKey2026MinLength32Bytes!}
+  expiration-ms: 86400000
 
 server:
   port: 8081
