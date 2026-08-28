@@ -2,6 +2,8 @@ package com.lowic.ai.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartException;
@@ -42,6 +44,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
         return buildResponse(HttpStatus.BAD_REQUEST, "ILLEGAL_ARGUMENT", e.getMessage());
+    }
+
+    // ──── 安全异常 ────
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthentication(AuthenticationException e) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_ERROR", "认证失败：" + e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException e) {
+        return buildResponse(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "权限不足：" + e.getMessage());
     }
 
     // ──── 文件上传异常 ────
